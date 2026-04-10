@@ -1,0 +1,66 @@
+site_name: CPHOS Question Bank SDK
+site_description: Python SDK for CPHOS Question Bank API
+repo_url: https://github.com/CPHOS/cphos-qdb-sdk-python
+repo_name: CPHOS/cphos-qdb-sdk-python
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            heading_level: 3
+            members_order: source
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_signature_annotations: true
+            separate_signature: true
+            signature_crossrefs: true
+            docstring_style: google
+            merge_init_into_class: true
+            show_if_no_docstring: false
+            inherited_members: false
+            filters:
+              - "!^_"
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+nav:
+  - 首页: index.md
+  - 快速开始: quickstart.md
+  - API 参考:
+      - 客户端: api/client.md
+      - 数据模型: api/models.md
+      - 异常: api/exceptions.md
