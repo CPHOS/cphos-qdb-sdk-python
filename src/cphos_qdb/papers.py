@@ -1,4 +1,4 @@
-"""Papers API mixin (sync + async)."""
+"""试卷 API mixin（同步 + 异步）。"""
 
 from __future__ import annotations
 

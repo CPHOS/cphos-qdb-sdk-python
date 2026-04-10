@@ -1,4 +1,4 @@
-"""CPHOS Question Bank Python SDK."""
+"""CPHOS 题库 Python SDK。"""
 
 from .client import AsyncQBClient, QBClient
 from .exceptions import (

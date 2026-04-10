@@ -1,10 +1,10 @@
-"""CPHOS Question Bank SDK exceptions."""
+"""题库 SDK 异常类。"""
 
 from __future__ import annotations
 
 
 class QBError(Exception):
-    """Base exception for all QB SDK errors."""
+    """SDK 基础异常，所有异常均继承自此类。"""
 
     def __init__(self, message: str, status_code: int | None = None) -> None:
         self.message = message
@@ -13,24 +13,24 @@ class QBError(Exception):
 
 
 class QBValidationError(QBError):
-    """400 — request validation failed."""
+    """400 — 请求参数校验失败。"""
 
 
 class QBAuthError(QBError):
-    """401 — authentication failed or token expired."""
+    """401 — 认证失败或令牌过期。"""
 
 
 class QBForbiddenError(QBError):
-    """403 — insufficient permissions."""
+    """403 — 权限不足。"""
 
 
 class QBNotFoundError(QBError):
-    """404 — resource not found or soft-deleted."""
+    """404 — 资源不存在或已删除。"""
 
 
 class QBConflictError(QBError):
-    """409 — operation conflict."""
+    """409 — 操作冲突。"""
 
 
 class QBServerError(QBError):
-    """500 / 503 — server-side error."""
+    """500 / 503 — 服务端错误。"""

@@ -9,13 +9,13 @@ Python SDK for CPHOS Question Bank API (bot account).
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb --git https://github.com/CPHOS/cphos-qdb-sdk-python.git --tag v0.1.0
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.1.0
 ```
 
 安装最新 `main` 分支：
 
 ```bash
-uv add cphos-qdb --git https://github.com/CPHOS/cphos-qdb-sdk-python.git
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git
 ```
 
 也可通过 pip 安装：
@@ -42,7 +42,9 @@ with QBClient("http://localhost:8080") as client:
         print(q.question_id, q.description)
 ```
 
-## 文档
+## 开发
+
+### 文档
 
 推送到 `main` 分支后，GitHub Actions 会自动构建并部署文档到 GitHub Pages。
 
@@ -51,4 +53,13 @@ with QBClient("http://localhost:8080") as client:
 ```bash
 uv sync --group docs
 uv run mkdocs serve
+```
+
+### 单元测试
+
+测试使用 [pytest](https://docs.pytest.org/) + [respx](https://lundberg.github.io/respx/) 模拟 HTTP 请求，覆盖异常、模型、传输层、认证、题目、试卷及客户端全部模块。
+
+```bash
+uv sync --group test
+uv run pytest tests/ -v
 ```

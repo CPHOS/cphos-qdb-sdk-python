@@ -1,4 +1,4 @@
-"""Auth API mixin (sync + async)."""
+"""认证 API mixin（同步 + 异步）。"""
 
 from __future__ import annotations
 

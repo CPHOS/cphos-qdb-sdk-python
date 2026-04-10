@@ -1,4 +1,4 @@
-"""Main client classes combining all API mixins."""
+"""客户端主类，组合所有 API mixin。"""
 
 from __future__ import annotations
 
@@ -10,16 +10,16 @@ from .questions import AsyncQuestionsMixin, QuestionsMixin
 
 
 class QBClient(AuthMixin, QuestionsMixin, PapersMixin):
-    """Synchronous Question Bank client for bot accounts.
+    """同步题库客户端，面向 bot 账号。
 
-    Usage::
+    用法::
 
         client = QBClient("http://localhost:8080")
         client.login("bot_user", "bot_password")
         questions = client.list_questions(category="T")
         client.close()
 
-    Or as a context manager::
+    或作为上下文管理器::
 
         with QBClient("http://localhost:8080") as c:
             c.login("bot", "pass")
@@ -49,9 +49,9 @@ class QBClient(AuthMixin, QuestionsMixin, PapersMixin):
 
 
 class AsyncQBClient(AsyncAuthMixin, AsyncQuestionsMixin, AsyncPapersMixin):
-    """Asynchronous Question Bank client for bot accounts.
+    """异步题库客户端，面向 bot 账号。
 
-    Usage::
+    用法::
 
         async with AsyncQBClient("http://localhost:8080") as c:
             await c.login("bot", "pass")

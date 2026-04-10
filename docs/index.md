@@ -15,16 +15,27 @@
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb --git https://github.com/CPHOS/cphos-qdb-sdk-python.git --tag v0.1.0
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.1.0
 ```
 
 安装最新 `main` 分支：
 
 ```bash
-uv add cphos-qdb --git https://github.com/CPHOS/cphos-qdb-sdk-python.git
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git
 ```
 
 也可从 [GitHub Releases](https://github.com/CPHOS/cphos-qdb-sdk-python/releases) 下载 `.whl` 文件后本地安装。
+
+## 开发
+
+### 单元测试
+
+测试使用 [pytest](https://docs.pytest.org/) + [respx](https://lundberg.github.io/respx/) 模拟 HTTP 请求，覆盖全部模块。
+
+```bash
+uv sync --group test
+uv run pytest tests/ -v
+```
 
 ## 文档
 

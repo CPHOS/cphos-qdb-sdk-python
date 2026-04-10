@@ -5,13 +5,13 @@
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb --git https://github.com/CPHOS/cphos-qdb-sdk-python.git --tag v0.1.0
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.1.0
 ```
 
 安装最新 `main` 分支：
 
 ```bash
-uv add cphos-qdb --git https://github.com/CPHOS/cphos-qdb-sdk-python.git
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git
 ```
 
 ## 同步用法

@@ -1,4 +1,4 @@
-"""HTTP transport layer with automatic token refresh (sync + async)."""
+"""HTTP 传输层，支持自动令牌刷新（同步 + 异步）。"""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def _raise_for_status(resp: httpx.Response) -> None:
 # ── Sync Transport ────────────────────────────────────────────────────────
 
 class SyncTransport:
-    """Synchronous HTTP transport with auto token‑refresh."""
+    """同步 HTTP 传输层，支持自动令牌刷新。"""
 
     def __init__(self, base_url: str, *, timeout: float = 30.0) -> None:
         self.base_url = base_url.rstrip("/")
@@ -142,7 +142,7 @@ class SyncTransport:
 # ── Async Transport ───────────────────────────────────────────────────────
 
 class AsyncTransport:
-    """Asynchronous HTTP transport with auto token‑refresh."""
+    """异步 HTTP 传输层，支持自动令牌刷新。"""
 
     def __init__(self, base_url: str, *, timeout: float = 30.0) -> None:
         self.base_url = base_url.rstrip("/")

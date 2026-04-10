@@ -42,7 +42,7 @@ plugins:
             signature_crossrefs: true
             docstring_style: google
             merge_init_into_class: true
-            show_if_no_docstring: false
+            show_if_no_docstring: true
             inherited_members: false
             filters:
               - "!^_"
