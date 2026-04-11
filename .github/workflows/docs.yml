@@ -46,21 +46,24 @@ jobs:
       - name: Deploy docs as dev (main branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          uv run mike deploy --push --update-aliases dev latest
-          uv run mike set-default --push latest
+          uv run mike deploy --push --allow-empty --update-aliases dev latest
+          uv run mike set-default --push --allow-empty latest
+          uv run mike list
 
       - name: Deploy docs for tag release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         env:
           VERSION: ${{ github.ref_name }}
         run: |
-          uv run mike deploy --push --update-aliases "$VERSION" latest
-          uv run mike set-default --push latest
+          uv run mike deploy --push --allow-empty --update-aliases "$VERSION" latest
+          uv run mike set-default --push --allow-empty latest
+          uv run mike list
 
       - name: Deploy docs for manual version
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
-          uv run mike deploy --push --update-aliases "$VERSION" latest
-          uv run mike set-default --push latest
+          uv run mike deploy --push --allow-empty --update-aliases "$VERSION" latest
+          uv run mike set-default --push --allow-empty latest
+          uv run mike list
