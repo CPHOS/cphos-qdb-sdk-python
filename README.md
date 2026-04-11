@@ -2,7 +2,9 @@
 
 Python SDK for CPHOS Question Bank API (bot account).
 
-提供 `QBClient`（同步）和 `AsyncQBClient`（异步）两套客户端，覆盖题目 CRUD、试卷 CRUD、审阅人管理、Bundle 下载等全部 bot 可用接口。
+提供 `QBClient`（同步）和 `AsyncQBClient`（异步）两套客户端，覆盖 bot 账号可用的认证、题目、试卷、审阅人管理和 Bundle 下载接口，并在首次请求时自动检查后端版本兼容性。
+
+权限说明：SDK 不在客户端硬编码 bot 权限策略，具体可调用能力由后端鉴权规则最终判定。
 
 ## 安装
 
@@ -36,23 +38,47 @@ uv add ./cphos_qdb-0.1.0-py3-none-any.whl
 from cphos_qdb import QBClient
 
 with QBClient("http://localhost:8080") as client:
+    print(client.version().version)
     client.login("bot_user", "bot_password")
     questions = client.list_questions(category="T", limit=10)
     for q in questions.items:
         print(q.question_id, q.description)
+
+    created = client.create_question(
+        "path/to/question.zip",
+        description="热学标定 gamma",
+        category="T",
+        tags=["thermodynamics"],
+    )
+
+    client.update_question_status(created.question_id, "reviewed")
+    client.update_question_tags(created.question_id, ["thermodynamics", "optics"])
+    client.create_question_difficulty(created.question_id, "human", 7, notes="较难")
 ```
 
 ## 开发
 
 ### 文档
 
-推送到 `main` 分支后，GitHub Actions 会自动构建并部署文档到 GitHub Pages。
+文档使用 `mike` 进行版本化发布，支持在站点中切换不同版本。
+
+- 推送到 `main`：自动发布 `dev`（并更新 `latest` 别名）
+- 推送 `v*` tag（如 `v0.1.0`）：自动发布对应版本并更新 `latest`
+- `workflow_dispatch`：可手动输入版本号发布
+
+首次启用时，请将仓库 GitHub Pages 来源设置为：`gh-pages` 分支 / 根目录。
 
 本地预览：
 
 ```bash
 uv sync --group docs
 uv run mkdocs serve
+```
+
+本地版本化预览：
+
+```bash
+uv run mike serve
 ```
 
 ### 单元测试
@@ -63,3 +89,14 @@ uv run mkdocs serve
 uv sync --group test
 uv run pytest tests/ -v
 ```
+
+### 版本兼容性
+
+- 主版本号必须一致
+- 在主版本一致前提下，后端版本必须大于等于 SDK 声明的最低兼容后端版本
+- 首次请求前会自动调用 `/version` 检查，不兼容时抛出 `QBVersionError`
+
+当前文档对应版本：
+
+- SDK 版本：`0.1.0`
+- 最低兼容后端版本：`0.1.1`

@@ -13,6 +13,7 @@ from cphos_qdb.exceptions import (
     QBNotFoundError,
     QBServerError,
     QBValidationError,
+    QBVersionError,
 )
 from cphos_qdb._transport import _raise_for_status
 
@@ -20,7 +21,7 @@ from cphos_qdb._transport import _raise_for_status
 class TestExceptionHierarchy:
     def test_all_inherit_from_qb_error(self):
         for cls in (QBValidationError, QBAuthError, QBForbiddenError,
-                    QBNotFoundError, QBConflictError, QBServerError):
+                    QBNotFoundError, QBConflictError, QBServerError, QBVersionError):
             exc = cls("test", status_code=400)
             assert isinstance(exc, QBError)
             assert isinstance(exc, Exception)

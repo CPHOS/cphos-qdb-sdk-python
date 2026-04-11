@@ -327,6 +327,13 @@ class HealthResponse(BaseModel):
     """服务名称。"""
 
 
+class VersionResponse(BaseModel):
+    """后端版本响应。"""
+
+    version: str
+    """后端语义化版本号。"""
+
+
 class MessageResponse(BaseModel):
     """通用消息响应。"""
 

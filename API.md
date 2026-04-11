@@ -1,43 +1,13 @@
 # Question Bank API 文档
 
-> 本文档完整描述后端所有 HTTP API 端点。前端开发者请据此对接。
-
-## 目录
-
-- [全局约定](#全局约定)
-- [认证与权限](#认证与权限)
-- [System — 系统](#system--系统)
-- [Auth — 认证](#auth--认证)
-- [Questions — 题目](#questions--题目)
-- [Papers — 试卷](#papers--试卷)
-- [Ops — 运维操作](#ops--运维操作)
-- [Admin — 管理员](#admin--管理员)
-
----
+> 本文档由 `scripts/build_api_doc.py` 自动生成，请勿手动编辑。
+> 源文件位于各模块的 `src/api/<module>/API.md`。
 
 ## 全局约定
 
 ### Base URL
 
 所有路径相对于服务根，例如 `http://localhost:8080`。
-
-### 统一错误格式
-
-```json
-{
-  "error": "错误描述文本"
-}
-```
-
-| HTTP 状态码 | 含义 |
-|---|---|
-| `400` | 请求参数不合法 |
-| `401` | 未认证（缺少 / 无效 / 过期的 access token） |
-| `403` | 无权限（角色不满足要求） |
-| `404` | 资源不存在（或已软删除） |
-| `409` | 操作冲突（如删除仍被引用的题目、恢复未被删除的记录等） |
-| `500` | 内部错误 |
-| `503` | 服务不可用（数据库不可达） |
 
 ### 分页响应格式
 
@@ -59,81 +29,52 @@
 
 `PATCH` / `POST` 的 JSON 请求体启用了 **deny_unknown_fields**，传入未定义字段会返回 `400`。
 
----
 
-## 认证与权限
+## 目录
 
-### 认证方式
+- [System — 系统](#system-系统)
+- [Auth — 认证](#auth-认证)
+- [Questions — 题目](#questions-题目)
+- [Papers — 试卷](#papers-试卷)
+- [Ops — 运维操作](#ops-运维操作)
+- [Admin — 管理员](#admin-管理员)
 
-- **Access Token**：JWT (HS256)，有效期 **1800 秒（30 分钟）**
-- **Refresh Token**：不透明 UUID 字符串，有效期 **7 天**，一次性消费（轮换）
-- **传递方式**：`Authorization: Bearer <access_token>`
-- **密码存储**：Argon2id
-
-### 角色
-
-| 角色 | 说明 |
-|---|---|
-| `viewer` | 只读 + bundle 下载（查询题目、试卷、下载 bundles） |
-| `user` | 可上传题目，编辑自己创建的题目，可被分配为审阅人 |
-| `leader` | 可创建/编辑/删除题目和试卷（非 used），可分配审阅人；有过期时间，过期后自动降级为 user |
-| `bot` | 同 leader 权限，无过期时间，用于自动化程序 |
-| `admin` | 全部权限 + ops 操作 + 用户管理 + 垃圾回收 |
-
-### Leader 过期机制
-
-- Leader 角色在创建时必须指定 `leader_expires_at`
-- JWT access token 中包含 `leader_exp` 声明
-- 中间件在验证 token 时检查过期时间，过期后自动将角色降级为 `user`
-
-### 权限矩阵
-
-| 端点 | 公开 | viewer | user | leader | bot | admin |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| `GET /health` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `POST /auth/login` | ✅ | — | — | — | — | — |
-| `POST /auth/refresh` | ✅ | — | — | — | — | — |
-| `GET /auth/me` | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `PATCH /auth/me/password` | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `POST /auth/logout` | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `GET` questions/papers/tags | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `POST` bundles | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `POST /questions`（上传） | — | — | ✅ | ✅ | ✅ | ✅ |
-| `PATCH /questions/:id` | — | — | ⚠️¹ | ✅ | ✅ | ✅ |
-| `DELETE /questions/:id` | — | — | — | ✅ | ✅ | ✅ |
-| `POST /papers`（创建） | — | — | — | ✅ | ✅ | ✅ |
-| `PATCH/PUT/DELETE` papers | — | — | — | ⚠️² | ⚠️² | ✅ |
-| 审阅人管理 | — | — | — | ✅ | ✅ | ✅ |
-| `GET /users/search` | — | — | — | ✅ | ✅ | ✅ |
-| ops (exports / quality / db) | — | — | — | — | — | ✅ |
-| `/admin/*` | — | — | — | — | — | ✅ |
-
-¹ user 只能编辑自己创建的题目（Full）或作为审阅人编辑难度标签（ReviewerOnly）
-² leader/bot 只能操作自己创建的试卷
-
-### 初始账号
-
-首次启动且 `users` 表为空时自动创建：
-
-- 用户名：`admin`
-- 密码：`changeme`
-- 角色：`admin`
-
-**请首次登录后立即修改密码。**
-
-### 环境变量
-
-| 变量 | 默认值 | 说明 |
-|---|---|---|
-| `QB_JWT_SECRET` | `qb-dev-secret-change-me-in-production` | JWT 签名密钥，**生产必须修改** |
 
 ---
 
 ## System — 系统
 
-### `GET /health`
+> 系统级接口，包括健康检查和全局错误格式定义。
 
-健康检查，探测数据库连通性。无需认证。
+### 统一错误格式
+
+所有接口在发生业务错误时返回：
+
+```json
+{
+  "error": "错误描述文本"
+}
+```
+
+| HTTP 状态码 | 含义 |
+|---|---|
+| `400` | 请求参数不合法 |
+| `401` | 未认证（缺少 / 无效 / 过期的 access token） |
+| `403` | 无权限（角色不满足要求） |
+| `404` | 资源不存在（或已软删除） |
+| `409` | 操作冲突（如删除仍被引用的题目、恢复未被删除的记录等） |
+| `500` | 内部错误 |
+| `503` | 服务不可用（数据库不可达） |
+
+---
+
+### Endpoints
+
+#### `GET /health`
+
+健康检查，探测数据库连通性。
+
+- **认证**：无需
 
 **成功响应** `200`：
 
@@ -154,9 +95,86 @@
 
 ---
 
+#### `GET /version`
+
+获取后端版本号（来自 Cargo.toml）。
+
+- **认证**：无需
+
+**成功响应** `200`：
+
+```json
+{
+  "version": "0.1.0"
+}
+```
+
+
+---
+
 ## Auth — 认证
 
-### `POST /auth/login`
+> 认证和授权接口，基于 JWT access token + 不透明 refresh token。
+
+### 概述
+
+- **Access Token**：JWT (HS256)，有效期 **1800 秒（30 分钟）**
+- **Refresh Token**：不透明 UUID 字符串，有效期 **7 天**，一次性消费（轮换）
+- **传递方式**：`Authorization: Bearer <access_token>`
+- **密码存储**：Argon2id
+- **角色**：5 级角色体系，基于能力而非线性层级
+  - `viewer`：只读 + bundle 下载
+  - `user`：可上传题目，编辑自己创建的题目，可被分配为审阅人
+  - `leader`：可创建/编辑/删除题目和试卷（非 used），可分配审阅人；有过期时间，过期后降级为 user
+  - `bot`：同 leader 权限，无过期时间，用于自动化程序
+  - `admin`：全部权限 + ops + 用户管理 + 垃圾回收
+
+### 权限矩阵
+
+| 端点 | 公开 | viewer | user | leader | bot | admin |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| `GET /health` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `POST /auth/login` | ✅ | — | — | — | — | — |
+| `POST /auth/refresh` | ✅ | — | — | — | — | — |
+| `GET /auth/me` | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `PATCH /auth/me/password` | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `POST /auth/logout` | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `GET` questions/papers/tags | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `POST` bundles | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `POST /questions`（上传） | — | — | ✅ | ✅ | ✅ | ✅ |
+| `PATCH /questions/:id`（更新） | — | — | ⚠️¹ | ✅ | ✅ | ✅ |
+| `DELETE /questions/:id` | — | — | — | ✅ | ✅ | ✅ |
+| `POST /papers`（创建） | — | — | — | ✅ | ✅ | ✅ |
+| `PATCH/PUT/DELETE` papers | — | — | — | ⚠️² | ✅ | ✅ |
+| 审阅人管理 | — | — | — | ✅ | ✅ | ✅ |
+| `GET /users/search` | — | — | — | ✅ | ✅ | ✅ |
+| ops (exports / quality / db) | — | — | — | — | — | ✅ |
+| `/admin/*` | — | — | — | — | — | ✅ |
+
+¹ user 只能编辑自己创建的题目（Full）或作为审阅人编辑难度标签（ReviewerOnly）
+² leader 只能操作自己创建的试卷
+
+### 环境变量
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `QB_JWT_SECRET` | `qb-dev-secret-change-me-in-production` | JWT 签名密钥，**生产必须修改** |
+
+### 初始账号
+
+首次启动且 `users` 表为空时自动创建：
+
+- 用户名：`admin`
+- 密码：`changeme`
+- 角色：`admin`
+
+**请首次登录后立即修改密码。**
+
+---
+
+### Endpoints
+
+#### `POST /auth/login`
 
 用户名密码登录，获取 token 对。
 
@@ -197,7 +215,7 @@
 
 ---
 
-### `POST /auth/refresh`
+#### `POST /auth/refresh`
 
 使用 refresh token 换取新 token 对。旧 refresh token 消费后立即失效（轮换机制）。
 
@@ -227,7 +245,7 @@
 
 ---
 
-### `POST /auth/logout`
+#### `POST /auth/logout`
 
 撤销指定 refresh token。
 
@@ -256,7 +274,7 @@
 
 ---
 
-### `GET /auth/me`
+#### `GET /auth/me`
 
 获取当前登录用户信息。
 
@@ -292,7 +310,7 @@
 
 ---
 
-### `PATCH /auth/me/password`
+#### `PATCH /auth/me/password`
 
 修改当前用户密码。
 
@@ -331,7 +349,7 @@
 
 ---
 
-### `GET /users/search`
+#### `GET /users/search`
 
 按关键词搜索用户，用于审阅人分配时的用户查找。
 
@@ -355,9 +373,43 @@
 | `400` | 缺少 `q` 参数或为空 |
 | `403` | 角色不满足 leader 及以上 |
 
+
 ---
 
 ## Questions — 题目
+
+> 题目的增删改查、文件替换、审阅人管理、难度管理和批量打包接口。
+
+所有请求需携带 `Authorization: Bearer <access_token>` 头。
+
+#### 权限模型（Trait-based）
+
+题目写操作按功能拆分为独立端点，各角色可调用的 API 如下：
+
+| 能力 | user | leader | reviewer (被分配) | admin/bot |
+|---|---|---|---|---|
+| 上传题目 | ✅ | ✅ | ✅ (作为 user) | ✅ |
+| 修改 description | ✅ (自己的) | ✅ (非 used) | — | ✅ |
+| 修改 category | ✅ (自己的) | ✅ (非 used) | — | ✅ |
+| 修改 tags | ✅ (自己的) | ✅ (非 used) | ✅ (被分配的) | ✅ |
+| 替换 file | ✅ (自己的) | ✅ (非 used) | — | ✅ |
+| 修改 status | — | ✅ (none/reviewed) | — | ✅ (任意) |
+| 创建难度 | — | ✅ (非 used) | ✅ (被分配的) | ✅ |
+| 修改难度 | — | ✅ (非 used) | ✅ (自己创建的) | ✅ |
+| 删除难度 | — | ✅ (非 used) | ✅ (自己创建的) | ✅ |
+| 管理 reviewers | — | ✅ | — | ✅ |
+| 软删除 | — | ✅ (非 used) | — | ✅ |
+
+**说明**：
+- "自己的" 指 `created_by` 为当前用户的题目
+- "非 used" 指 `status != 'used'` 的题目
+- "被分配的" 指在 `question_reviews` 表中被 leader 分配为审阅人的题目
+- reviewer 进行任意操作时，自动将其 display_name 加入 `questions.reviewers` 数组（去重）
+- 替换文件时，后端自动重置 difficulty（清空）、status（`none`）、author（创建者 display_name）、reviewers（`[]`）
+- 上传时，后端自动设置 difficulty 为空、status 为 `none`、author 为上传者 display_name、reviewers 为 `[]`
+- 后端自动维护 `created_by`、`created_at`、`updated_at`
+
+---
 
 ### 数据结构
 
@@ -366,7 +418,7 @@
 ```json
 {
   "question_id": "uuid",
-  "source": { "tex": "\\begin{problem}[20]\n..." },
+  "source": { "tex": "problem.tex" },
   "category": "T",
   "status": "reviewed",
   "description": "热学标定 gamma",
@@ -379,464 +431,248 @@
   },
   "created_by": "uuid or null",
   "created_at": "2026-01-01T00:00:00.000Z",
-  "updated_at": "2026-01-01T00:00:00.000Z"
+  "updated_at": "2026-01-01T00:00:00.000Z",
+  "allow_auto_reviewer": false
 }
 ```
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `question_id` | string(UUID) | 题目 ID |
-| `source.tex` | string | tex 源码内容 |
-| `category` | `"none"` \| `"T"` \| `"E"` | 分类：无 / 理论 / 实验 |
+| `source.tex` | string | tex 源码文件路径 |
+| `category` | `"none"` \| `"T"` \| `"E"` | 分类 |
 | `status` | `"none"` \| `"reviewed"` \| `"used"` | 状态 |
-| `description` | string | 题目描述（用于命名和搜索） |
+| `description` | string | 题目描述 |
 | `score` | int \| null | 从 tex `\begin{problem}[N]` 自动提取的分值 |
-| `author` | string | 命题人 |
-| `reviewers` | string[] | 审题人列表 |
+| `author` | string | 命题人（上传 / 文件重置时自动设置为创建者 display_name） |
+| `reviewers` | string[] | 审题人列表（reviewer 操作时自动追加） |
 | `tags` | string[] | 标签列表 |
-| `difficulty` | object | 难度评估，key 为 tag（如 `human`），value 含 `score`(1-10)、可选 `notes` 和可选 `updated_by`（编辑者信息） |
-| `allow_auto_reviewer` | boolean | 是否允许审阅人在保存审阅编辑时自动将姓名添加到审题人列表，默认 `false` |
-| `created_by` | string(UUID) \| null | 创建者的 user_id，历史数据可能为 null |
+| `difficulty` | object | 难度评估，key 为 algorithm_tag，value 含 `score`(1-10)、可选 `notes` 和 `updated_by` |
+| `allow_auto_reviewer` | boolean | 是否启用自动审阅人标记 |
+| `created_by` | string(UUID) \| null | 创建者 user_id |
 | `created_at` | string(ISO 8601) | 创建时间 |
 | `updated_at` | string(ISO 8601) | 更新时间 |
 
-#### `DifficultyValue`
-
-每个难度标签的值对象：
-
-```json
-{
-  "score": 7,
-  "notes": "较难",
-  "updated_by": {
-    "user_id": "uuid",
-    "username": "alice",
-    "display_name": "Alice"
-  }
-}
-```
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `score` | int (1-10) | 难度分数 |
-| `notes` | string \| null | 难度备注，可选 |
-| `updated_by` | object \| null | 最后编辑此难度标签的用户信息，只读，历史数据可能为 null |
-| `updated_by.user_id` | string(UUID) | 编辑者 ID |
-| `updated_by.username` | string | 编辑者用户名 |
-| `updated_by.display_name` | string | 编辑者显示名 |
-
-> **注意**：`updated_by` 为只读字段，由服务端自动填充。创建/更新难度时请勿传入此字段，否则返回 `400`。
-
 #### `QuestionDetail`
 
-在 `QuestionSummary` 基础上增加：
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `tex_object_id` | string(UUID) | tex 文件的对象存储 ID |
-| `assets` | `QuestionAssetRef[]` | 关联的资源文件列表 |
-| `papers` | `QuestionPaperRef[]` | 包含此题的试卷列表（仅未软删试卷） |
-
-#### `QuestionAssetRef`
-
-```json
-{
-  "path": "assets/fig1.png",
-  "file_kind": "asset",
-  "object_id": "uuid",
-  "mime_type": "image/png"
-}
-```
-
-#### `QuestionPaperRef`
-
-```json
-{
-  "paper_id": "uuid",
-  "description": "综合训练试卷 A",
-  "title": "综合训练 2026 A 卷",
-  "subtitle": "校内选拔 初版",
-  "sort_order": 1
-}
-```
-
-#### `QuestionTagsResponse`
-
-```json
-{
-  "tags": ["kinematics", "lenses", "mechanics", "optics"]
-}
-```
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `tags` | string[] | 所有未软删除题目的去重标签列表，按字典序升序返回 |
-
-#### `QuestionDifficultyTagsResponse`
-
-```json
-{
-  "difficulty_tags": ["algo1", "human"]
-}
-```
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `difficulty_tags` | string[] | 所有未软删除题目的去重难度标签列表，按字典序升序返回。前端建议默认选中 `human` |
+在 `QuestionSummary` 基础上增加 `tex_object_id`、`assets`、`papers`。
 
 ---
 
-### `GET /questions`
+### Endpoints
 
-按条件分页查询题目。
+#### `GET /questions`
 
-- **认证**：`viewer` 及以上
-- **说明**：只返回未软删除题目
+按条件分页查询题目。认证：`viewer` 及以上。
 
-**Query 参数**：
-
-| 参数 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `paper_id` | UUID | — | 按所属试卷过滤 |
-| `category` | `"none"` \| `"T"` \| `"E"` | — | 按分类过滤 |
-| `tag` | string | — | 按标签过滤 |
-| `reviewer` | string | — | 按审核人过滤，精确匹配 `reviewers` 数组中的某一项 |
-| `assigned_reviewer_id` | UUID | — | 按审阅人管理中分配的 reviewer_id（UUID）过滤 |
-| `score_min` | int (≥0) | — | 分值下限 |
-| `score_max` | int (≥0) | — | 分值上限 |
-| `difficulty_tag` | string | — | 难度 tag，如 `human` |
-| `difficulty_min` | int (1-10) | — | 难度下限（需同时有 `difficulty_tag`） |
-| `difficulty_max` | int (1-10) | — | 难度上限（需同时有 `difficulty_tag`） |
-| `q` | string | — | 关键词，ILIKE 匹配 `description` |
-| `created_after` | string(ISO 8601) | — | 创建时间下限（含），如 `2026-01-01` 或 `2026-01-01T00:00:00Z` |
-| `created_before` | string(ISO 8601) | — | 创建时间上限（含） |
-| `updated_after` | string(ISO 8601) | — | 更新时间下限（含） |
-| `updated_before` | string(ISO 8601) | — | 更新时间上限（含） |
-| `limit` | int | `20` | 每页数量，范围 1-100 |
-| `offset` | int | `0` | 偏移量 |
+**Query 参数**：`paper_id`, `category`, `tag`, `reviewer`, `assigned_reviewer_id`, `score_min`, `score_max`, `difficulty_tag`, `difficulty_min`, `difficulty_max`, `q`, `created_after`, `created_before`, `updated_after`, `updated_before`, `limit` (1-100, 默认 20), `offset` (默认 0)。
 
 **成功响应** `200`：分页包裹，`items` 为 `QuestionSummary[]`。
 
 ---
 
-### `GET /questions/tags`
+#### `GET /questions/tags`
 
-返回所有未软删除题目当前使用中的标签列表，适合前端做自动补全或候选选择。
-
-- **认证**：`viewer` 及以上
-- **说明**：只统计未软删除题目；自动去重；按字典序升序返回
-
-**成功响应** `200`：`QuestionTagsResponse` 对象。
+返回未软删除题目的去重标签列表。认证：`viewer` 及以上。
 
 ---
 
-### `GET /questions/difficulty-tags`
+#### `GET /questions/difficulty-tags`
 
-返回所有未软删除题目当前使用中的难度标签（algorithm_tag）列表，适合前端做下拉选择。
-
-- **认证**：`viewer` 及以上
-- **说明**：只统计未软删除题目；自动去重；按字典序升序返回；前端建议默认选中 `human`
-
-**成功响应** `200`：`QuestionDifficultyTagsResponse` 对象。
+返回未软删除题目的去重难度标签列表。认证：`viewer` 及以上。
 
 ---
 
-### `GET /questions/:question_id`
+#### `GET /questions/:question_id`
 
-返回单个题目完整详情。
-
-- **认证**：`viewer` 及以上
-- **路径参数**：`question_id` — UUID
-- **说明**：只返回未软删除题目
-
-**成功响应** `200`：`QuestionDetail` 对象。
-
-**错误**：`404` — 题目不存在或已软删除
+返回单个题目详情。认证：`viewer` 及以上。
 
 ---
 
-### `POST /questions`
+#### `POST /questions`
 
 上传新题目（zip 包）。
 
 - **认证**：`user` / `leader` / `bot` / `admin`
 - **Content-Type**：`multipart/form-data`
-- **大小限制**：zip 文件 ≤ 20 MiB
 
 **Multipart 字段**：
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
-| `file` | binary (zip) | ✅ | 题目 zip 文件 |
-| `description` | string | ✅ | 题目描述，非空；不能含 `/ \ : * ? " < > \|`，不能是 `.`/`..`，不能以 `.` 结尾 |
-| `difficulty` | JSON string | ✅ | 难度对象，必须至少含 `human` key，score 1-10 |
+| `file` | binary (zip) | ✅ | 题目 zip 文件（≤ 20 MiB） |
+| `description` | string | ✅ | 题目描述 |
 | `category` | string | — | `"none"` \| `"T"` \| `"E"`，默认 `"none"` |
-| `tags` | JSON string | — | 字符串数组，默认 `[]`，会去重，不允许空字符串元素 |
-| `status` | string | — | `"none"` \| `"reviewed"` \| `"used"`，默认 `"none"` |
-| `author` | string | — | 命题人，默认 `""` |
-| `reviewers` | JSON string | — | 字符串数组，默认 `[]`，会去重，不允许空字符串元素 |
+| `tags` | JSON string | — | 字符串数组，默认 `[]` |
 
-**ZIP 结构要求**：
+**后端自动设置**：`difficulty` = 空、`status` = `"none"`、`author` = 上传者 display_name、`reviewers` = `[]`。
 
-- 逻辑根目录必须恰好一个 `.tex` 文件
-- 可选一个 `assets/` 目录（内含引用的图片等资源）
-- 逻辑根目录的其他杂散文件会被忽略，不参与导入
-- 除根目录 tex / 杂散文件外，其他被导入的非根目录文件都必须位于 `assets/` 下
-- 若最外层是单一包裹目录，会自动剥离一层
-- 拒绝路径穿越（`..`）和绝对路径
-- 总解压体积 ≤ 64 MiB
-
-**自动行为**：
-
-- `score` 自动从 tex 中的 `\begin{problem}[<score>]` 提取（整数或 null）
-- `score` 不支持通过 PATCH 手动修改
-
-**成功响应** `200`：
-
-```json
-{
-  "question_id": "uuid",
-  "file_name": "question.zip",
-  "imported_assets": 2,
-  "status": "imported"
-}
-```
-
-**错误**：`400` — zip 格式错误 / 缺少 tex 文件 / 参数校验失败
-
-**示例**：
-
-```bash
-curl -X POST http://127.0.0.1:8080/questions \
-  -H "Authorization: Bearer <token>" \
-  -F 'file=@question.zip;type=application/zip' \
-  -F 'description=热学标定 gamma' \
-  -F 'difficulty={"human":{"score":7}}' \
-  -F 'category=T' \
-  -F 'tags=["optics","thermodynamics"]'
-```
+**成功响应** `200`：`{ "question_id", "file_name", "imported_assets", "status": "imported" }`
 
 ---
 
-### `PATCH /questions/:question_id`
+#### `PUT /questions/:question_id/file`
 
-部分更新题目元数据。
+替换题目的 zip 文件。
 
-- **认证**：需已认证；根据访问等级决定可更新字段
-  - **Full 访问**（admin / leader / bot（非 used）/ owner）：可更新所有字段，`difficulty` 为整体替换
-  - **ReviewerOnly 访问**（被分配的审阅人）：仅可更新 `difficulty`（合并模式）和 `delete_difficulty_tags`
-- **Content-Type**：`application/json`
-- **路径参数**：`question_id` — UUID
-- **说明**：至少提供一个字段；已软删除题目返回 `404`；使用行锁保证并发安全
-
-**请求体字段**（均为可选，但至少提供一个）：
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `category` | `"none"` \| `"T"` \| `"E"` | 分类 |
-| `description` | string | 题目描述（不能为 null 或空串），需满足文件名安全规则 |
-| `tags` | string[] | 标签列表，整体替换；空数组 `[]` 表示清空 |
-| `status` | `"none"` \| `"reviewed"` \| `"used"` | 状态 |
-| `difficulty` | object | Full：整体替换难度评估；必须至少含 `human`；score 1-10；`notes` 若为空串会规范化为 null。ReviewerOnly：合并模式，只能修改自己创建的 tag 或作为最后编辑者的 `human` tag |
-| `delete_difficulty_tags` | string[] | 要删除的难度标签列表；不能包含 `human`。ReviewerOnly 只能删除自己创建的 tag |
-| `author` | string | 命题人 |
-| `reviewers` | string[] | 审题人列表，会去重 |
-| `allow_auto_reviewer` | boolean | 是否允许自动添加审阅人到审题人列表（仅 Full 访问可设置） |
-
-```json
-{
-  "category": "T",
-  "tags": ["optics"],
-  "difficulty": {
-    "human": { "score": 8 }
-  }
-}
-```
-
-**成功响应** `200`：更新后的 `QuestionDetail`。
-
-**错误**：
-
-| 状态码 | 场景 |
-|---|---|
-| `400` | 无可更新字段 / 参数校验失败 / 未知字段 |
-| `404` | 题目不存在或已软删除 |
-
----
-
-### `PUT /questions/:question_id/file`
-
-替换题目的 zip 文件内容（tex 和 assets），不修改元数据。
-
-- **认证**：需 Full 访问权限（admin / leader / bot（非 used）/ owner）
+- **认证**：owner / leader（非 used）/ admin / bot
 - **Content-Type**：`multipart/form-data`
-- **路径参数**：`question_id` — UUID
-- **大小限制**：zip 文件 ≤ 20 MiB
+- **字段**：`file`（binary zip）
 
-**Multipart 字段**：
+**自动重置**：`difficulty`（清空所有条目）、`status` → `"none"`、`author` → 创建者当前 display_name、`reviewers` → `[]`。
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `file` | binary (zip) | ✅ | 新的题目 zip 文件（结构要求同创建） |
-
-**行为**：
-
-- 删除旧的 tex / asset 文件对象
-- 写入新文件对象
-- 更新 `source_tex_path`
-- 重新提取 `score`
-- 更新 `updated_at`
-- 保留所有原有元数据（category、tags、difficulty 等）
-
-**成功响应** `200`：
-
-```json
-{
-  "question_id": "uuid",
-  "file_name": "question_v2.zip",
-  "source_tex_path": "main.tex",
-  "imported_assets": 3,
-  "status": "replaced"
-}
-```
-
-**错误**：`404` — 题目不存在或已软删除
+**成功响应** `200`：`{ "question_id", "file_name", "source_tex_path", "imported_assets", "status": "replaced" }`
 
 ---
 
-### `DELETE /questions/:question_id`
+#### `PATCH /questions/:question_id/description`
+
+更新题目描述。
+
+- **认证**：owner / leader（非 used）/ admin / bot
+- **Content-Type**：`application/json`
+- **请求体**：`{ "description": "string" }`
+
+**成功响应** `200`：`QuestionDetail`
+
+---
+
+#### `PATCH /questions/:question_id/category`
+
+更新题目分类。
+
+- **认证**：owner / leader（非 used）/ admin / bot
+- **Content-Type**：`application/json`
+- **请求体**：`{ "category": "T" | "E" | "none" }`
+
+**成功响应** `200`：`QuestionDetail`
+
+---
+
+#### `PATCH /questions/:question_id/tags`
+
+更新题目标签。
+
+- **认证**：owner / leader（非 used）/ reviewer（被分配）/ admin / bot
+- **Content-Type**：`application/json`
+- **请求体**：`{ "tags": ["string", ...] }`
+- **说明**：reviewer 操作时自动追加 display_name 到 `reviewers` 数组
+
+**成功响应** `200`：`QuestionDetail`
+
+---
+
+#### `PATCH /questions/:question_id/status`
+
+更新题目状态。
+
+- **认证**：leader（只能设 `"none"` 或 `"reviewed"`）/ admin / bot（任意合法值）
+- **Content-Type**：`application/json`
+- **请求体**：`{ "status": "none" | "reviewed" | "used" }`
+
+**成功响应** `200`：`QuestionDetail`
+
+---
+
+#### `POST /questions/:question_id/difficulties`
+
+创建难度条目。
+
+- **认证**：reviewer（被分配）/ leader（非 used）/ admin / bot
+- **Content-Type**：`application/json`
+- **请求体**：`{ "algorithm_tag": "string", "score": 1-10, "notes": "string (optional)" }`
+- **说明**：`created_by` 自动设为当前用户；reviewer 操作时追加 display_name 到 `reviewers`
+
+**成功响应** `200`：`QuestionDetail`
+
+**错误**：`409` — algorithm_tag 已存在
+
+---
+
+#### `PATCH /questions/:question_id/difficulties/:algorithm_tag`
+
+更新难度条目。
+
+- **认证**：reviewer（仅自己创建的）/ leader（非 used）/ admin / bot
+- **Content-Type**：`application/json`
+- **请求体**：`{ "score": 1-10, "notes": "string (optional)" }`
+- **说明**：`updated_by` 自动更新为当前用户
+
+**成功响应** `200`：`QuestionDetail`
+
+**错误**：`404` — algorithm_tag 不存在；`403` — reviewer 试图修改他人创建的条目
+
+---
+
+#### `DELETE /questions/:question_id/difficulties/:algorithm_tag`
+
+删除难度条目。
+
+- **认证**：reviewer（仅自己创建的）/ leader（非 used）/ admin / bot
+
+**成功响应** `200`：`QuestionDetail`
+
+**错误**：`404` — algorithm_tag 不存在；`403` — reviewer 试图删除他人创建的条目
+
+---
+
+#### `POST /questions/:question_id/reviewers`
+
+分配审阅人（写入 `question_reviews` 表）。
+
+- **认证**：leader / bot / admin
+- **Content-Type**：`application/json`
+- **请求体**：`{ "reviewer_id": "uuid" }`
+
+**成功响应** `200`：`{ "reviewers": [QuestionReviewer] }`
+
+---
+
+#### `DELETE /questions/:question_id/reviewers/:reviewer_id`
+
+移除审阅人。
+
+- **认证**：leader / bot / admin
+
+**成功响应** `200`：`{ "reviewers": [QuestionReviewer] }`
+
+---
+
+#### `GET /questions/:question_id/reviewers`
+
+列出已分配的审阅人。认证：`viewer` 及以上。
+
+---
+
+#### `DELETE /questions/:question_id`
 
 软删除题目。
 
-- **认证**：`leader` / `bot` / `admin`
-- **路径参数**：`question_id` — UUID
+- **认证**：leader（非 used）/ admin / bot
 
-**行为**：
+**前置检查**：题目不能被活跃试卷引用。
 
-- 设置 `deleted_at` / `deleted_by` / `updated_at`
-- 不会立刻删除文件对象，由管理员垃圾回收处理
-- 已软删除题目重复删除返回 `404`
-- 若题目仍被未软删除试卷引用，返回 `409`
-- `leader`/`bot` 不能删除 `status=used` 的题目，`admin` 可以
-
-**成功响应** `200`：
-
-```json
-{
-  "question_id": "uuid",
-  "status": "deleted"
-}
-```
-
-**错误**：
-
-| 状态码 | 场景 |
-|---|---|
-| `404` | 题目不存在或已软删除 |
-| `409` | 题目仍被未软删除试卷引用 |
+**成功响应** `200`：`{ "question_id", "status": "deleted" }`
 
 ---
 
-### `POST /questions/bundles`
+#### `POST /questions/bundles`
 
-批量打包下载题目原始文件。
+批量下载题目 zip 打包。认证：`viewer` 及以上。
 
-- **认证**：`viewer` 及以上
-- **Content-Type**：`application/json`
-
-**请求体**：
-
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `question_ids` | string(UUID)[] | ✅ | 题目 ID 列表，非空、去重、每项必须为有效 UUID |
-
-```json
-{
-  "question_ids": ["uuid-1", "uuid-2", "uuid-3"]
-}
-```
-
-**成功响应** `200`：
-
-- **Content-Type**：`application/zip`
-- **Header** 含 `content-disposition`（下载文件名）和 `content-length`
-
-**ZIP 结构**：
-
-```
-manifest.json
-热学标定gamma_550e84/
-  main.tex
-  assets/
-    fig1.png
-```
-
-- `manifest.json`：题目清单元数据
-- 每题目录命名规则：`{description}_{uuid前6位}/`
-- 目录内含原始 `.tex` 和 `assets/` 资源
-
-**错误**：
-
-| 状态码 | 场景 |
-|---|---|
-| `400` | 列表为空 / 含空值 / 含无效 UUID / 有重复 |
-| `404` | 有题目不存在或已软删除 |
-
----
-
-### `GET /questions/:question_id/reviewers`
-
-获取题目的审阅人列表。
-
-- **认证**：任意已认证角色
-- **路径参数**：`question_id` — UUID
-
-**成功响应** `200`：
-
-```json
-{
-  "reviewers": [
-    {
-      "reviewer_id": "uuid",
-      "username": "alice",
-      "display_name": "Alice",
-      "assigned_by": "uuid",
-      "created_at": "2026-01-01T00:00:00.000Z"
-    }
-  ]
-}
-```
-
----
-
-### `POST /questions/:question_id/reviewers`
-
-分配审阅人到题目。
-
-- **认证**：`leader` / `bot` / `admin`
-- **Content-Type**：`application/json`
-
-**请求体**：
-
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `reviewer_id` | string(UUID) | ✅ | 要分配的用户 ID，必须是 `user` 角色且账号启用 |
-
-**成功响应** `200`：更新后的审阅人列表。
-
----
-
-### `DELETE /questions/:question_id/reviewers/:reviewer_id`
-
-移除题目的审阅人。
-
-- **认证**：`leader` / `bot` / `admin`
-
-**成功响应** `200`：更新后的审阅人列表。
 
 ---
 
 ## Papers — 试卷
+
+> 试卷的增删改查、附录文件替换和批量打包接口。
+
+- **`GET` 操作和 `POST /papers/bundles`**：需要任意已认证角色（`viewer` 及以上）
+- **`POST /papers`（创建）**：需要 `leader` / `bot` / `admin`（即 `can_create_paper` 能力）
+- **`PATCH / PUT / DELETE`（修改/删除）**：admin/bot 可操作任何试卷；leader 只能操作自己创建的试卷
+- 所有请求需携带 `Authorization: Bearer <access_token>` 头
+
+---
 
 ### 数据结构
 
@@ -885,7 +721,9 @@ manifest.json
 
 ---
 
-### `GET /papers`
+### Endpoints
+
+#### `GET /papers`
 
 按条件分页查询试卷。
 
@@ -911,7 +749,7 @@ manifest.json
 
 ---
 
-### `GET /papers/:paper_id`
+#### `GET /papers/:paper_id`
 
 返回试卷详情和按顺序展开的题目列表。
 
@@ -925,11 +763,11 @@ manifest.json
 
 ---
 
-### `POST /papers`
+#### `POST /papers`
 
 创建试卷。
 
-- **认证**：`leader` / `bot` / `admin`
+- **认证**：`leader` / `bot` / `admin`（即 `can_create_paper` 能力）
 - **Content-Type**：`multipart/form-data`
 
 **Multipart 字段**：
@@ -987,11 +825,11 @@ curl -X POST http://127.0.0.1:8080/papers \
 
 ---
 
-### `PATCH /papers/:paper_id`
+#### `PATCH /papers/:paper_id`
 
 部分更新试卷元数据和题目列表。
 
-- **认证**：admin 可操作任何试卷；leader/bot 只能操作自己创建的试卷
+- **认证**：admin/bot 可操作任何试卷；leader 只能操作自己创建的试卷
 - **Content-Type**：`application/json`
 - **路径参数**：`paper_id` — UUID
 - **说明**：至少提供一个字段；已软删除试卷返回 `404`
@@ -1029,11 +867,11 @@ curl -X POST http://127.0.0.1:8080/papers \
 
 ---
 
-### `PUT /papers/:paper_id/file`
+#### `PUT /papers/:paper_id/file`
 
 替换试卷的附录 zip 文件。
 
-- **认证**：admin 可操作任何试卷；leader/bot 只能操作自己创建的试卷
+- **认证**：admin/bot 可操作任何试卷；leader 只能操作自己创建的试卷
 - **Content-Type**：`multipart/form-data`
 - **路径参数**：`paper_id` — UUID
 - **大小限制**：≤ 20 MiB
@@ -1065,11 +903,11 @@ curl -X POST http://127.0.0.1:8080/papers \
 
 ---
 
-### `DELETE /papers/:paper_id`
+#### `DELETE /papers/:paper_id`
 
 软删除试卷。
 
-- **认证**：admin 可操作任何试卷；leader/bot 只能操作自己创建的试卷
+- **认证**：admin/bot 可操作任何试卷；leader 只能操作自己创建的试卷
 - **路径参数**：`paper_id` — UUID
 
 **行为**：
@@ -1089,7 +927,7 @@ curl -X POST http://127.0.0.1:8080/papers \
 
 ---
 
-### `POST /papers/bundles`
+#### `POST /papers/bundles`
 
 批量打包下载试卷（含自动排版的 main.tex）。
 
@@ -1144,13 +982,21 @@ manifest.json
 | `400` | 列表为空 / 含无效 UUID / 有重复 |
 | `404` | 有试卷不存在或已软删除 |
 
+
 ---
 
 ## Ops — 运维操作
 
-所有 Ops 接口需要 `admin` 角色。
+> 运维操作接口：数据导出、质量检查、数据库备份与恢复。批量打包接口见 [Questions API](../src/api/questions/API.md) 和 [Papers API](../src/api/papers/API.md)。
 
-### `GET /database/backup`
+- 所有 Ops 接口需要 `admin` 角色
+- 所有请求需携带 `Authorization: Bearer <access_token>` 头
+
+---
+
+### Endpoints
+
+#### `GET /database/backup`
 
 下载当前数据库的 plain SQL 备份文件。
 
@@ -1161,7 +1007,7 @@ manifest.json
 
 - **Content-Type**：`application/sql`
 - **Header** 含 `content-disposition`（下载文件名）和 `content-length`
-- **Body**：`pg_dump` 生成的 plain SQL，可按 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) 中的恢复方式导入
+- **Body**：`pg_dump` 生成的 plain SQL，可按 [部署文档](../docs/DEPLOYMENT.md) 中的恢复方式导入
 
 **说明**：
 
@@ -1171,7 +1017,7 @@ manifest.json
 
 ---
 
-### `POST /exports/run`
+#### `POST /exports/run`
 
 导出题目数据到文件。
 
@@ -1224,7 +1070,7 @@ manifest.json
 
 ---
 
-### `POST /quality-checks/run`
+#### `POST /quality-checks/run`
 
 运行数据质量检查。
 
@@ -1270,7 +1116,7 @@ manifest.json
 
 ---
 
-### `POST /database/restore`
+#### `POST /database/restore`
 
 上传 plain SQL 备份并覆盖恢复当前数据库内容。
 
@@ -1288,7 +1134,7 @@ manifest.json
 
 - 先执行 `DROP SCHEMA public CASCADE; CREATE SCHEMA public;`
 - 再执行 `psql -v ON_ERROR_STOP=1 -f <uploaded.sql>` 导入上传文件
-- 恢复流程与 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) 中“覆盖当前库”的恢复方法保持一致
+- 恢复流程与 [部署文档](../docs/DEPLOYMENT.md) 中“覆盖当前库”的恢复方法保持一致
 
 **成功响应** `200`：
 
@@ -1307,17 +1153,26 @@ manifest.json
 | `400` | 缺少 `file` 字段 / 上传文件为空 / 文件超过 64 MiB |
 | `500` | `psql` 恢复失败；响应里的 `error` 会尽量返回具体 stderr 提示。如果失败发生在清空 schema 之后，数据库可能已被部分覆盖 |
 
+
 ---
 
 ## Admin — 管理员
 
-所有 `/admin/*` 接口需要 `admin` 角色。
+> 管理员接口：查看/恢复软删除数据、垃圾回收、用户管理。
+
+- 所有 `/admin/*` 接口需要 `admin` 角色
+- 所有请求需携带 `Authorization: Bearer <access_token>` 头
+- `deleted_by` 返回执行删除操作的用户 UUID（鉴权上线前创建的记录该字段为 `null`）
+
+---
 
 ### 题目管理
 
 #### `GET /admin/questions`
 
 管理员视角查询题目，可查看软删除记录。
+
+- **认证**：`admin`
 
 **Query 参数**：
 
@@ -1342,6 +1197,7 @@ manifest.json
 
 管理员视角获取题目详情（含软删除记录）。
 
+- **认证**：`admin`
 - **路径参数**：`question_id` — UUID
 
 **成功响应** `200`：`AdminQuestionDetail` = `QuestionDetail` + `deleted_at` / `deleted_by` / `is_deleted`。
@@ -1352,6 +1208,7 @@ manifest.json
 
 恢复已软删除的题目。
 
+- **认证**：`admin`
 - **路径参数**：`question_id` — UUID
 - **请求体**：无
 
@@ -1374,6 +1231,8 @@ manifest.json
 
 管理员视角查询试卷，可查看软删除记录。
 
+- **认证**：`admin`
+
 **Query 参数**：
 
 | 参数 | 类型 | 默认值 | 说明 |
@@ -1391,6 +1250,7 @@ manifest.json
 
 管理员视角获取试卷详情（含软删除记录）。
 
+- **认证**：`admin`
 - **路径参数**：`paper_id` — UUID
 
 **成功响应** `200`：`AdminPaperDetail` = `PaperDetail` + `deleted_at` / `deleted_by` / `is_deleted`。
@@ -1401,6 +1261,7 @@ manifest.json
 
 恢复已软删除的试卷。
 
+- **认证**：`admin`
 - **路径参数**：`paper_id` — UUID
 - **请求体**：无
 
@@ -1428,6 +1289,8 @@ manifest.json
 
 预演垃圾回收（dry run），不会真正提交。
 
+- **认证**：`admin`
+- **Content-Type**：`application/json`
 - **请求体**：必须为空对象 `{}`（传任何额外字段返回 `400`）
 
 **成功响应** `200`：
@@ -1448,6 +1311,8 @@ manifest.json
 
 真正执行垃圾回收（硬删除）。
 
+- **认证**：`admin`
+- **Content-Type**：`application/json`
 - **请求体**：`{}`
 
 **执行顺序**：
@@ -1466,6 +1331,8 @@ manifest.json
 
 分页列出所有用户。
 
+- **认证**：`admin`
+
 **Query 参数**：
 
 | 参数 | 类型 | 默认值 | 说明 |
@@ -1481,6 +1348,7 @@ manifest.json
 
 创建新用户。
 
+- **认证**：`admin`
 - **Content-Type**：`application/json`
 
 **请求体**：
@@ -1518,6 +1386,7 @@ manifest.json
 
 更新用户信息。
 
+- **认证**：`admin`
 - **路径参数**：`user_id` — UUID
 - **Content-Type**：`application/json`
 
@@ -1528,7 +1397,7 @@ manifest.json
 | `display_name` | string | 显示名 |
 | `role` | `"viewer"` \| `"user"` \| `"leader"` \| `"bot"` \| `"admin"` | 角色 |
 | `is_active` | boolean | 是否启用 |
-| `leader_expires_at` | string(RFC 3339) \| null | Leader 角色过期时间；设为 null 清除；设置 role 为 leader 时必须确保该字段有值 |
+| `leader_expires_at` | string(RFC 3339) \| null | Leader 角色过期时间；设为 null 清除过期时间；设置 role 为 leader 时必须确保该字段有值 |
 
 ```json
 {
@@ -1558,6 +1427,7 @@ manifest.json
 
 停用用户（非硬删除）。
 
+- **认证**：`admin`
 - **路径参数**：`user_id` — UUID
 
 **行为**：
@@ -1587,6 +1457,7 @@ manifest.json
 
 管理员重置指定用户密码。
 
+- **认证**：`admin`
 - **路径参数**：`user_id` — UUID
 - **Content-Type**：`application/json`
 

@@ -9,6 +9,7 @@ from .exceptions import (
     QBNotFoundError,
     QBServerError,
     QBValidationError,
+    QBVersionError,
 )
 from .models import (
     DifficultyValue,
@@ -24,6 +25,7 @@ from .models import (
     ReviewersResponse,
     TokenResponse,
     UserProfile,
+    VersionResponse,
 )
 
 __all__ = [
@@ -36,6 +38,7 @@ __all__ = [
     "QBNotFoundError",
     "QBServerError",
     "QBValidationError",
+    "QBVersionError",
     "DifficultyValue",
     "HealthResponse",
     "PaginatedResponse",
@@ -49,4 +52,5 @@ __all__ = [
     "ReviewersResponse",
     "TokenResponse",
     "UserProfile",
+    "VersionResponse",
 ]

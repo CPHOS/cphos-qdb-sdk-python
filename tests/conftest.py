@@ -28,6 +28,10 @@ def token_data() -> dict[str, Any]:
     }
 
 
+def version_data(version: str = "0.1.1") -> dict[str, Any]:
+    return {"version": version}
+
+
 def user_profile_data() -> dict[str, Any]:
     return {
         "user_id": "u-001",
@@ -129,7 +133,7 @@ def mock_api():
 @pytest.fixture()
 def sync_client():
     """Pre-configured sync client (not logged in)."""
-    client = QBClient(BASE_URL)
+    client = QBClient(BASE_URL, check_version=False)
     yield client
     client.close()
 
@@ -137,7 +141,7 @@ def sync_client():
 @pytest.fixture()
 def async_client():
     """Pre-configured async client (not logged in)."""
-    client = AsyncQBClient(BASE_URL)
+    client = AsyncQBClient(BASE_URL, check_version=False)
     yield client
 
 

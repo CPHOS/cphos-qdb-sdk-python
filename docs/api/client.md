@@ -9,6 +9,7 @@
         - __init__
         - close
         - health
+        - version
         - login
         - logout
         - me
@@ -17,7 +18,13 @@
         - list_questions
         - get_question
         - create_question
-        - update_question
+        - update_question_description
+        - update_question_category
+        - update_question_tags
+        - update_question_status
+        - create_question_difficulty
+        - update_question_difficulty
+        - delete_question_difficulty
         - replace_question_file
         - delete_question
         - get_question_tags
@@ -44,6 +51,7 @@
         - __init__
         - close
         - health
+        - version
         - login
         - logout
         - me
@@ -52,7 +60,13 @@
         - list_questions
         - get_question
         - create_question
-        - update_question
+        - update_question_description
+        - update_question_category
+        - update_question_tags
+        - update_question_status
+        - create_question_difficulty
+        - update_question_difficulty
+        - delete_question_difficulty
         - replace_question_file
         - delete_question
         - get_question_tags

@@ -15,7 +15,12 @@ from .exceptions import (
     QBNotFoundError,
     QBServerError,
     QBValidationError,
+    QBVersionError,
 )
+from .models import VersionResponse
+
+SDK_VERSION = "0.1.0"
+EXPECTED_BACKEND_VERSION = "0.1.1"
 
 _STATUS_MAP: dict[int, type[QBError]] = {
     400: QBValidationError,
@@ -38,16 +43,47 @@ def _raise_for_status(resp: httpx.Response) -> None:
     raise exc_cls(msg, status_code=resp.status_code)
 
 
+def _parse_version(version: str) -> tuple[int, int, int]:
+    parts = version.split(".")
+    if len(parts) != 3:
+        raise QBVersionError(f"无法解析后端版本号: {version}")
+    try:
+        major, minor, patch = (int(part) for part in parts)
+    except ValueError as exc:
+        raise QBVersionError(f"无法解析后端版本号: {version}") from exc
+    return major, minor, patch
+
+
+def _is_compatible_version(expected: str, actual: str) -> bool:
+    expected_major, expected_minor, expected_patch = _parse_version(expected)
+    actual_major, actual_minor, actual_patch = _parse_version(actual)
+    if expected_major != actual_major:
+        return False
+    return (actual_minor, actual_patch) >= (expected_minor, expected_patch)
+
+
 # ── Sync Transport ────────────────────────────────────────────────────────
 
 class SyncTransport:
     """同步 HTTP 传输层，支持自动令牌刷新。"""
 
-    def __init__(self, base_url: str, *, timeout: float = 30.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        *,
+        timeout: float = 30.0,
+        sdk_version: str = SDK_VERSION,
+        expected_backend_version: str = EXPECTED_BACKEND_VERSION,
+        check_version: bool = True,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self._access_token: str | None = None
         self._refresh_token: str | None = None
         self._client = httpx.Client(base_url=self.base_url, timeout=timeout)
+        self._sdk_version = sdk_version
+        self._expected_backend_version = expected_backend_version
+        self._check_version = check_version
+        self._version_checked = False
 
     def close(self) -> None:
         self._client.close()
@@ -82,6 +118,24 @@ class SyncTransport:
         self._refresh_token = data["refresh_token"]
         return True
 
+    def get_version(self) -> VersionResponse:
+        resp = self._client.get("/version")
+        _raise_for_status(resp)
+        return VersionResponse.model_validate(resp.json())
+
+    def ensure_version_compatible(self) -> VersionResponse:
+        version = self.get_version()
+        if not _is_compatible_version(self._expected_backend_version, version.version):
+            raise QBVersionError(
+                (
+                    "后端版本不兼容: "
+                    f"SDK {self._sdk_version} 期望兼容后端 {self._expected_backend_version}，"
+                    f"实际检测到 {version.version}"
+                )
+            )
+        self._version_checked = True
+        return version
+
     # ── core request ──────────────────────────────────────────────────────
 
     def request(
@@ -95,6 +149,9 @@ class SyncTransport:
         files: Any = None,
         stream: bool = False,
     ) -> httpx.Response:
+        if self._check_version and not self._version_checked and path != "/version":
+            self.ensure_version_compatible()
+
         kwargs: dict[str, Any] = {"headers": self._auth_headers}
         if json_body is not None:
             kwargs["json"] = json_body
@@ -144,11 +201,23 @@ class SyncTransport:
 class AsyncTransport:
     """异步 HTTP 传输层，支持自动令牌刷新。"""
 
-    def __init__(self, base_url: str, *, timeout: float = 30.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        *,
+        timeout: float = 30.0,
+        sdk_version: str = SDK_VERSION,
+        expected_backend_version: str = EXPECTED_BACKEND_VERSION,
+        check_version: bool = True,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self._access_token: str | None = None
         self._refresh_token: str | None = None
         self._client = httpx.AsyncClient(base_url=self.base_url, timeout=timeout)
+        self._sdk_version = sdk_version
+        self._expected_backend_version = expected_backend_version
+        self._check_version = check_version
+        self._version_checked = False
 
     async def close(self) -> None:
         await self._client.aclose()
@@ -183,6 +252,24 @@ class AsyncTransport:
         self._refresh_token = data["refresh_token"]
         return True
 
+    async def get_version(self) -> VersionResponse:
+        resp = await self._client.get("/version")
+        _raise_for_status(resp)
+        return VersionResponse.model_validate(resp.json())
+
+    async def ensure_version_compatible(self) -> VersionResponse:
+        version = await self.get_version()
+        if not _is_compatible_version(self._expected_backend_version, version.version):
+            raise QBVersionError(
+                (
+                    "后端版本不兼容: "
+                    f"SDK {self._sdk_version} 期望兼容后端 {self._expected_backend_version}，"
+                    f"实际检测到 {version.version}"
+                )
+            )
+        self._version_checked = True
+        return version
+
     # ── core request ──────────────────────────────────────────────────────
 
     async def request(
@@ -196,6 +283,9 @@ class AsyncTransport:
         files: Any = None,
         stream: bool = False,
     ) -> httpx.Response:
+        if self._check_version and not self._version_checked and path != "/version":
+            await self.ensure_version_compatible()
+
         kwargs: dict[str, Any] = {"headers": self._auth_headers}
         if json_body is not None:
             kwargs["json"] = json_body

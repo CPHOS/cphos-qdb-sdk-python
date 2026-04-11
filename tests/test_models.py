@@ -22,6 +22,7 @@ from cphos_qdb.models import (
     ReviewersResponse,
     TokenResponse,
     UserProfile,
+    VersionResponse,
 )
 
 from .conftest import (
@@ -33,6 +34,7 @@ from .conftest import (
     reviewer_data,
     token_data,
     user_profile_data,
+    version_data,
 )
 
 
@@ -174,6 +176,10 @@ class TestSystemModels:
     def test_health(self):
         h = HealthResponse.model_validate({"status": "ok", "service": "qb"})
         assert h.status == "ok"
+
+    def test_version(self):
+        v = VersionResponse.model_validate(version_data())
+        assert v.version == "0.1.1"
 
     def test_message(self):
         m = MessageResponse.model_validate({"message": "done"})

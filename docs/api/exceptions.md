@@ -14,4 +14,6 @@
 
 ::: cphos_qdb.exceptions.QBConflictError
 
+::: cphos_qdb.exceptions.QBVersionError
+
 ::: cphos_qdb.exceptions.QBServerError

@@ -32,5 +32,9 @@ class QBConflictError(QBError):
     """409 — 操作冲突。"""
 
 
+class QBVersionError(QBError):
+    """SDK 与后端版本不兼容。"""
+
+
 class QBServerError(QBError):
     """500 / 503 — 服务端错误。"""

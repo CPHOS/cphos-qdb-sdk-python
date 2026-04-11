@@ -3,6 +3,10 @@ site_description: Python SDK for CPHOS Question Bank API
 repo_url: https://github.com/CPHOS/cphos-qdb-sdk-python
 repo_name: CPHOS/cphos-qdb-sdk-python
 
+extra:
+  version:
+    provider: mike
+
 theme:
   name: material
   language: zh

@@ -57,20 +57,17 @@ class TestBuildQuestionParams:
 
 class TestBuildCreateFields:
     def test_required_only(self):
-        fields = _build_create_fields("desc", {"human": {"score": 5}})
+        fields = _build_create_fields("desc")
         assert fields["description"] == "desc"
-        assert json.loads(fields["difficulty"]) == {"human": {"score": 5}}
         assert "category" not in fields
 
     def test_with_optionals(self):
         fields = _build_create_fields(
-            "desc", {"human": {"score": 5}},
-            category="T", tags=["a", "b"], status="reviewed",
-            author="me", reviewers=["r1"],
+            "desc",
+            category="T", tags=["a", "b"],
         )
         assert fields["category"] == "T"
         assert json.loads(fields["tags"]) == ["a", "b"]
-        assert fields["author"] == "me"
 
 
 # ── Sync mixin tests ────────────────────────────────────────────────────
@@ -82,7 +79,7 @@ class TestQuestionsMixin:
         respx_mock.get("/questions").mock(
             return_value=httpx.Response(200, json=paginated_response(items, total=2))
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = client.list_questions(category="T", limit=20)
         assert isinstance(result, PaginatedResponse)
@@ -97,7 +94,7 @@ class TestQuestionsMixin:
         respx_mock.get("/questions/q-001").mock(
             return_value=httpx.Response(200, json=question_detail_data())
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         detail = client.get_question("q-001")
         assert isinstance(detail, QuestionDetail)
@@ -114,13 +111,12 @@ class TestQuestionsMixin:
                 "status": "none",
             })
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         fake_zip = io.BytesIO(b"PK\x03\x04fake")
         result = client.create_question(
             fake_zip,
             description="new question",
-            difficulty={"human": {"score": 5}},
             category="T",
             tags=["optics"],
         )
@@ -129,18 +125,93 @@ class TestQuestionsMixin:
         client.close()
 
     @respx.mock(base_url=BASE_URL)
-    def test_update_question(self, respx_mock):
-        respx_mock.patch("/questions/q-001").mock(
+    def test_update_question_description(self, respx_mock):
+        respx_mock.patch("/questions/q-001/description").mock(
             return_value=httpx.Response(200, json=question_detail_data())
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
-        detail = client.update_question("q-001", status="reviewed", tags=["thermo"])
+        detail = client.update_question_description("q-001", "updated")
         assert isinstance(detail, QuestionDetail)
         req = respx_mock.calls.last.request
         body = json.loads(req.content)
-        assert body["status"] == "reviewed"
-        assert body["tags"] == ["thermo"]
+        assert body == {"description": "updated"}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    def test_update_question_category(self, respx_mock):
+        respx_mock.patch("/questions/q-001/category").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.update_question_category("q-001", "E")
+        assert detail.question_id == "q-001"
+        req = respx_mock.calls.last.request
+        assert json.loads(req.content) == {"category": "E"}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    def test_update_question_tags(self, respx_mock):
+        respx_mock.patch("/questions/q-001/tags").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.update_question_tags("q-001", ["thermo"])
+        assert detail.question_id == "q-001"
+        req = respx_mock.calls.last.request
+        assert json.loads(req.content) == {"tags": ["thermo"]}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    def test_update_question_status(self, respx_mock):
+        respx_mock.patch("/questions/q-001/status").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.update_question_status("q-001", "reviewed")
+        assert detail.question_id == "q-001"
+        req = respx_mock.calls.last.request
+        assert json.loads(req.content) == {"status": "reviewed"}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    def test_create_question_difficulty(self, respx_mock):
+        respx_mock.post("/questions/q-001/difficulties").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.create_question_difficulty("q-001", "human", 7, notes="较难")
+        assert detail.question_id == "q-001"
+        req = respx_mock.calls.last.request
+        assert json.loads(req.content) == {"algorithm_tag": "human", "score": 7, "notes": "较难"}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    def test_update_question_difficulty(self, respx_mock):
+        respx_mock.patch("/questions/q-001/difficulties/human").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.update_question_difficulty("q-001", "human", 8)
+        assert detail.question_id == "q-001"
+        req = respx_mock.calls.last.request
+        assert json.loads(req.content) == {"score": 8}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    def test_delete_question_difficulty(self, respx_mock):
+        respx_mock.delete("/questions/q-001/difficulties/human").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.delete_question_difficulty("q-001", "human")
+        assert detail.question_id == "q-001"
         client.close()
 
     @respx.mock(base_url=BASE_URL)
@@ -154,7 +225,7 @@ class TestQuestionsMixin:
                 "status": "none",
             })
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = client.replace_question_file("q-001", io.BytesIO(b"PK"))
         assert result.question_id == "q-001"
@@ -165,7 +236,7 @@ class TestQuestionsMixin:
         respx_mock.delete("/questions/q-001").mock(
             return_value=httpx.Response(200, json={"question_id": "q-001", "status": "deleted"})
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = client.delete_question("q-001")
         assert isinstance(result, QuestionDeleteResult)
@@ -177,7 +248,7 @@ class TestQuestionsMixin:
         respx_mock.get("/questions/tags").mock(
             return_value=httpx.Response(200, json={"tags": ["optics", "thermo"]})
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         tags = client.get_question_tags()
         assert tags == ["optics", "thermo"]
@@ -188,7 +259,7 @@ class TestQuestionsMixin:
         respx_mock.get("/questions/difficulty-tags").mock(
             return_value=httpx.Response(200, json={"difficulty_tags": ["human", "ai"]})
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         tags = client.get_difficulty_tags()
         assert tags == ["human", "ai"]
@@ -199,7 +270,7 @@ class TestQuestionsMixin:
         respx_mock.post("/questions/bundles").mock(
             return_value=httpx.Response(200, content=b"ZIP_CONTENT_HERE")
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         dest = tmp_path / "bundle.zip"
         result = client.download_question_bundle(["q-001"], str(dest))
@@ -212,7 +283,7 @@ class TestQuestionsMixin:
         respx_mock.get("/questions/q-001/reviewers").mock(
             return_value=httpx.Response(200, json={"reviewers": [reviewer_data()]})
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = client.list_reviewers("q-001")
         assert isinstance(result, ReviewersResponse)
@@ -224,7 +295,7 @@ class TestQuestionsMixin:
         respx_mock.post("/questions/q-001/reviewers").mock(
             return_value=httpx.Response(200, json={"reviewers": [reviewer_data()]})
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = client.assign_reviewer("q-001", "u-002")
         assert len(result.reviewers) == 1
@@ -238,7 +309,7 @@ class TestQuestionsMixin:
         respx_mock.delete("/questions/q-001/reviewers/u-002").mock(
             return_value=httpx.Response(200, json={"reviewers": []})
         )
-        client = QBClient(BASE_URL)
+        client = QBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = client.remove_reviewer("q-001", "u-002")
         assert result.reviewers == []
@@ -255,7 +326,7 @@ class TestAsyncQuestionsMixin:
         respx_mock.get("/questions").mock(
             return_value=httpx.Response(200, json=paginated_response(items))
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = await client.list_questions(category="T")
         assert len(result.items) == 1
@@ -266,7 +337,7 @@ class TestAsyncQuestionsMixin:
         respx_mock.get("/questions/q-001").mock(
             return_value=httpx.Response(200, json=question_detail_data())
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         detail = await client.get_question("q-001")
         assert detail.question_id == "q-001"
@@ -282,24 +353,45 @@ class TestAsyncQuestionsMixin:
                 "status": "none",
             })
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = await client.create_question(
             io.BytesIO(b"PK"),
             description="async q",
-            difficulty={"human": {"score": 3}},
         )
         assert result.question_id == "q-new"
         await client.close()
 
     @respx.mock(base_url=BASE_URL)
-    async def test_update_question(self, respx_mock):
-        respx_mock.patch("/questions/q-001").mock(
+    async def test_update_question_description(self, respx_mock):
+        respx_mock.patch("/questions/q-001/description").mock(
             return_value=httpx.Response(200, json=question_detail_data())
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
-        detail = await client.update_question("q-001", description="updated")
+        detail = await client.update_question_description("q-001", "updated")
+        assert detail.question_id == "q-001"
+        await client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    async def test_update_question_status(self, respx_mock):
+        respx_mock.patch("/questions/q-001/status").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = AsyncQBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = await client.update_question_status("q-001", "reviewed")
+        assert detail.question_id == "q-001"
+        await client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    async def test_create_question_difficulty(self, respx_mock):
+        respx_mock.post("/questions/q-001/difficulties").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = AsyncQBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = await client.create_question_difficulty("q-001", "human", 6)
         assert detail.question_id == "q-001"
         await client.close()
 
@@ -308,7 +400,7 @@ class TestAsyncQuestionsMixin:
         respx_mock.delete("/questions/q-001").mock(
             return_value=httpx.Response(200, json={"question_id": "q-001", "status": "deleted"})
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = await client.delete_question("q-001")
         assert result.status == "deleted"
@@ -319,7 +411,7 @@ class TestAsyncQuestionsMixin:
         respx_mock.get("/questions/tags").mock(
             return_value=httpx.Response(200, json={"tags": ["t1"]})
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         tags = await client.get_question_tags()
         assert tags == ["t1"]
@@ -330,7 +422,7 @@ class TestAsyncQuestionsMixin:
         respx_mock.post("/questions/bundles").mock(
             return_value=httpx.Response(200, content=b"ZIPDATA")
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         dest = tmp_path / "out.zip"
         result = await client.download_question_bundle(["q-001"], str(dest))
@@ -342,7 +434,7 @@ class TestAsyncQuestionsMixin:
         respx_mock.post("/questions/q-001/reviewers").mock(
             return_value=httpx.Response(200, json={"reviewers": [reviewer_data()]})
         )
-        client = AsyncQBClient(BASE_URL)
+        client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         result = await client.assign_reviewer("q-001", "u-002")
         assert len(result.reviewers) == 1

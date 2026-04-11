@@ -69,33 +69,18 @@ def _build_question_params(
 
 def _build_create_fields(
     description: str,
-    difficulty: dict[str, Any],
     *,
     category: str | None = None,
     tags: list[str] | None = None,
-    status: str | None = None,
-    author: str | None = None,
-    reviewers: list[str] | None = None,
 ) -> dict[str, str]:
     fields: dict[str, str] = {
         "description": description,
-        "difficulty": json.dumps(difficulty),
     }
     if category is not None:
         fields["category"] = category
     if tags is not None:
         fields["tags"] = json.dumps(tags)
-    if status is not None:
-        fields["status"] = status
-    if author is not None:
-        fields["author"] = author
-    if reviewers is not None:
-        fields["reviewers"] = json.dumps(reviewers)
     return fields
-
-
-def _build_update_body(**kwargs: Any) -> dict[str, Any]:
-    return {k: v for k, v in kwargs.items() if v is not None}
 
 
 def _open_zip(file: str | Path | IO[bytes]) -> tuple[str, IO[bytes], str]:
@@ -184,31 +169,23 @@ class QuestionsMixin:
         file: str | Path | IO[bytes],
         *,
         description: str,
-        difficulty: dict[str, Any],
         category: str | None = None,
         tags: list[str] | None = None,
-        status: str | None = None,
-        author: str | None = None,
-        reviewers: list[str] | None = None,
     ) -> QuestionCreateResult:
         """上传新题目（zip 包）。
 
         Args:
             file: zip 文件路径或已打开的二进制文件对象。
             description: 题目描述。
-            difficulty: 难度对象，必须含 `human` key，如 `{"human": {"score": 7}}`。
             category: 分类 (`"none"` / `"T"` / `"E"`)。
             tags: 标签列表。
-            status: 状态 (`"none"` / `"reviewed"` / `"used"`)。
-            author: 命题人。
-            reviewers: 审题人列表。
         """
         fname, fh, mime = _open_zip(file)
         try:
             fields = _build_create_fields(
-                description, difficulty,
-                category=category, tags=tags, status=status,
-                author=author, reviewers=reviewers,
+                description,
+                category=category,
+                tags=tags,
             )
             resp = self._t.request(
                 "POST", "/questions",
@@ -220,43 +197,98 @@ class QuestionsMixin:
                 fh.close()
         return QuestionCreateResult.model_validate(resp.json())
 
-    def update_question(
+    def update_question_description(
         self,
         question_id: str,
-        *,
-        category: str | None = None,
-        description: str | None = None,
-        tags: list[str] | None = None,
-        status: str | None = None,
-        difficulty: dict[str, Any] | None = None,
-        delete_difficulty_tags: list[str] | None = None,
-        author: str | None = None,
-        reviewers: list[str] | None = None,
-        allow_auto_reviewer: bool | None = None,
+        description: str,
     ) -> QuestionDetail:
-        """部分更新题目元数据。
+        """更新题目描述。
 
         Args:
             question_id: 题目 UUID。
-            category: 分类。
             description: 题目描述。
-            tags: 标签列表（整体替换）。
-            status: 状态。
-            difficulty: 难度评估（整体替换，需含 `human`）。
-            delete_difficulty_tags: 要删除的难度标签列表。
-            author: 命题人。
-            reviewers: 审题人列表。
-            allow_auto_reviewer: 是否允许自动添加审阅人。
         """
-        body = _build_update_body(
-            category=category, description=description, tags=tags,
-            status=status, difficulty=difficulty,
-            delete_difficulty_tags=delete_difficulty_tags,
-            author=author, reviewers=reviewers,
-            allow_auto_reviewer=allow_auto_reviewer,
-        )
         return QuestionDetail.model_validate(
-            self._t.patch(f"/questions/{question_id}", json_body=body).json()
+            self._t.patch(
+                f"/questions/{question_id}/description",
+                json_body={"description": description},
+            ).json()
+        )
+
+    def update_question_category(self, question_id: str, category: str) -> QuestionDetail:
+        """更新题目分类。"""
+        return QuestionDetail.model_validate(
+            self._t.patch(
+                f"/questions/{question_id}/category",
+                json_body={"category": category},
+            ).json()
+        )
+
+    def update_question_tags(self, question_id: str, tags: list[str]) -> QuestionDetail:
+        """整体替换题目标签。"""
+        return QuestionDetail.model_validate(
+            self._t.patch(
+                f"/questions/{question_id}/tags",
+                json_body={"tags": tags},
+            ).json()
+        )
+
+    def update_question_status(self, question_id: str, status: str) -> QuestionDetail:
+        """更新题目状态。"""
+        return QuestionDetail.model_validate(
+            self._t.patch(
+                f"/questions/{question_id}/status",
+                json_body={"status": status},
+            ).json()
+        )
+
+    def create_question_difficulty(
+        self,
+        question_id: str,
+        algorithm_tag: str,
+        score: int,
+        *,
+        notes: str | None = None,
+    ) -> QuestionDetail:
+        """创建题目难度条目。"""
+        body: dict[str, Any] = {
+            "algorithm_tag": algorithm_tag,
+            "score": score,
+        }
+        if notes is not None:
+            body["notes"] = notes
+        return QuestionDetail.model_validate(
+            self._t.post(
+                f"/questions/{question_id}/difficulties",
+                json_body=body,
+            ).json()
+        )
+
+    def update_question_difficulty(
+        self,
+        question_id: str,
+        algorithm_tag: str,
+        score: int,
+        *,
+        notes: str | None = None,
+    ) -> QuestionDetail:
+        """更新题目难度条目。"""
+        body: dict[str, Any] = {"score": score}
+        if notes is not None:
+            body["notes"] = notes
+        return QuestionDetail.model_validate(
+            self._t.patch(
+                f"/questions/{question_id}/difficulties/{algorithm_tag}",
+                json_body=body,
+            ).json()
+        )
+
+    def delete_question_difficulty(self, question_id: str, algorithm_tag: str) -> QuestionDetail:
+        """删除题目难度条目。"""
+        return QuestionDetail.model_validate(
+            self._t.delete(
+                f"/questions/{question_id}/difficulties/{algorithm_tag}"
+            ).json()
         )
 
     def replace_question_file(
@@ -282,7 +314,7 @@ class QuestionsMixin:
         return QuestionFileReplaceResult.model_validate(resp.json())
 
     def delete_question(self, question_id: str) -> QuestionDeleteResult:
-        """软删除题目。bot 不能删除 `status=used` 的题目。"""
+        """软删除题目。"""
         return QuestionDeleteResult.model_validate(
             self._t.delete(f"/questions/{question_id}").json()
         )
@@ -405,19 +437,15 @@ class AsyncQuestionsMixin:
         file: str | Path | IO[bytes],
         *,
         description: str,
-        difficulty: dict[str, Any],
         category: str | None = None,
         tags: list[str] | None = None,
-        status: str | None = None,
-        author: str | None = None,
-        reviewers: list[str] | None = None,
     ) -> QuestionCreateResult:
         fname, fh, mime = _open_zip(file)
         try:
             fields = _build_create_fields(
-                description, difficulty,
-                category=category, tags=tags, status=status,
-                author=author, reviewers=reviewers,
+                description,
+                category=category,
+                tags=tags,
             )
             resp = await self._t.request(
                 "POST", "/questions",
@@ -429,29 +457,86 @@ class AsyncQuestionsMixin:
                 fh.close()
         return QuestionCreateResult.model_validate(resp.json())
 
-    async def update_question(
+    async def update_question_description(
         self,
         question_id: str,
-        *,
-        category: str | None = None,
-        description: str | None = None,
-        tags: list[str] | None = None,
-        status: str | None = None,
-        difficulty: dict[str, Any] | None = None,
-        delete_difficulty_tags: list[str] | None = None,
-        author: str | None = None,
-        reviewers: list[str] | None = None,
-        allow_auto_reviewer: bool | None = None,
+        description: str,
     ) -> QuestionDetail:
-        body = _build_update_body(
-            category=category, description=description, tags=tags,
-            status=status, difficulty=difficulty,
-            delete_difficulty_tags=delete_difficulty_tags,
-            author=author, reviewers=reviewers,
-            allow_auto_reviewer=allow_auto_reviewer,
-        )
         return QuestionDetail.model_validate(
-            (await self._t.patch(f"/questions/{question_id}", json_body=body)).json()
+            (await self._t.patch(
+                f"/questions/{question_id}/description",
+                json_body={"description": description},
+            )).json()
+        )
+
+    async def update_question_category(self, question_id: str, category: str) -> QuestionDetail:
+        return QuestionDetail.model_validate(
+            (await self._t.patch(
+                f"/questions/{question_id}/category",
+                json_body={"category": category},
+            )).json()
+        )
+
+    async def update_question_tags(self, question_id: str, tags: list[str]) -> QuestionDetail:
+        return QuestionDetail.model_validate(
+            (await self._t.patch(
+                f"/questions/{question_id}/tags",
+                json_body={"tags": tags},
+            )).json()
+        )
+
+    async def update_question_status(self, question_id: str, status: str) -> QuestionDetail:
+        return QuestionDetail.model_validate(
+            (await self._t.patch(
+                f"/questions/{question_id}/status",
+                json_body={"status": status},
+            )).json()
+        )
+
+    async def create_question_difficulty(
+        self,
+        question_id: str,
+        algorithm_tag: str,
+        score: int,
+        *,
+        notes: str | None = None,
+    ) -> QuestionDetail:
+        body: dict[str, Any] = {
+            "algorithm_tag": algorithm_tag,
+            "score": score,
+        }
+        if notes is not None:
+            body["notes"] = notes
+        return QuestionDetail.model_validate(
+            (await self._t.post(
+                f"/questions/{question_id}/difficulties",
+                json_body=body,
+            )).json()
+        )
+
+    async def update_question_difficulty(
+        self,
+        question_id: str,
+        algorithm_tag: str,
+        score: int,
+        *,
+        notes: str | None = None,
+    ) -> QuestionDetail:
+        body: dict[str, Any] = {"score": score}
+        if notes is not None:
+            body["notes"] = notes
+        return QuestionDetail.model_validate(
+            (await self._t.patch(
+                f"/questions/{question_id}/difficulties/{algorithm_tag}",
+                json_body=body,
+            )).json()
+        )
+
+    async def delete_question_difficulty(self, question_id: str, algorithm_tag: str) -> QuestionDetail:
+        return QuestionDetail.model_validate(
+            (await self._t.delete(
+                f"/questions/{question_id}/difficulties/{algorithm_tag}"
+            )).json()
         )
 
     async def replace_question_file(

@@ -56,4 +56,6 @@
 
 ::: cphos_qdb.models.HealthResponse
 
+::: cphos_qdb.models.VersionResponse
+
 ::: cphos_qdb.models.MessageResponse

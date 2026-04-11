@@ -20,6 +20,8 @@ uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git
 from cphos_qdb import QBClient
 
 with QBClient("http://localhost:8080") as client:
+    print(client.version().version)
+
     # 登录
     client.login("bot_user", "bot_password")
 
@@ -39,16 +41,20 @@ with QBClient("http://localhost:8080") as client:
     created = client.create_question(
         "path/to/question.zip",
         description="热学标定 gamma",
-        difficulty={"human": {"score": 7}},
         category="T",
         tags=["thermodynamics"],
     )
 
-    # 更新题目
-    client.update_question(
+    # 更新题目状态与标签
+    client.update_question_status(created.question_id, "reviewed")
+    client.update_question_tags(created.question_id, ["thermodynamics", "optics"])
+
+    # 创建难度条目
+    client.create_question_difficulty(
         created.question_id,
-        status="reviewed",
-        tags=["thermodynamics", "optics"],
+        "human",
+        7,
+        notes="较难",
     )
 
     # 创建试卷
@@ -71,6 +77,7 @@ from cphos_qdb import AsyncQBClient
 
 async def main():
     async with AsyncQBClient("http://localhost:8080") as client:
+        print((await client.version()).version)
         await client.login("bot_user", "bot_password")
 
         questions = await client.list_questions(category="T")
@@ -78,6 +85,8 @@ async def main():
             print(q.description)
 
         detail = await client.get_question(questions.items[0].question_id)
+
+        await client.update_question_status(detail.question_id, "reviewed")
 
 asyncio.run(main())
 ```
