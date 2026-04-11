@@ -621,6 +621,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cphos_qdb.client.QBClient.update_question_author" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_author
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cphos_qdb.client.QBClient.update_question_reviewer_names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_reviewer_names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cphos_qdb.client.QBClient.create_question_difficulty" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1011,6 +1033,28 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cphos_qdb.client.AsyncQBClient.update_question_author" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_author
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cphos_qdb.client.AsyncQBClient.update_question_reviewer_names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_reviewer_names
       
     </span>
   </a>
@@ -1513,6 +1557,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cphos_qdb.client.QBClient.update_question_author" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_author
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cphos_qdb.client.QBClient.update_question_reviewer_names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_reviewer_names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cphos_qdb.client.QBClient.create_question_difficulty" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1903,6 +1969,28 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cphos_qdb.client.AsyncQBClient.update_question_author" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_author
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cphos_qdb.client.AsyncQBClient.update_question_reviewer_names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;update_question_reviewer_names
       
     </span>
   </a>
@@ -3193,6 +3281,50 @@ check_version: 是否在首次连接时校验后端版本兼容性。</p>
 <div class="doc doc-object doc-function">
 
 
+<h4 id="cphos_qdb.client.QBClient.update_question_author" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">update_question_author</span>
+
+
+<a href="#cphos_qdb.client.QBClient.update_question_author" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">update_question_author</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">question_id</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">author</span><span class="p">:</span> <span class="n"><span title="str">str</span></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            QuestionDetail (cphos_qdb.models.QuestionDetail)" href="../models/#cphos_qdb.models.QuestionDetail">QuestionDetail</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>更新题目命题人。</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="cphos_qdb.client.QBClient.update_question_reviewer_names" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">update_question_reviewer_names</span>
+
+
+<a href="#cphos_qdb.client.QBClient.update_question_reviewer_names" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">update_question_reviewer_names</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">question_id</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">reviewers</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            QuestionDetail (cphos_qdb.models.QuestionDetail)" href="../models/#cphos_qdb.models.QuestionDetail">QuestionDetail</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>整体替换题目审题人显示名列表。</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h4 id="cphos_qdb.client.QBClient.create_question_difficulty" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">create_question_difficulty</span>
 
@@ -3868,7 +4000,7 @@ check_version: 是否在首次连接时校验后端版本兼容性。</p>
 
     <div class="doc doc-contents ">
 
-        <p>部分更新试卷元数据。bot 只能操作自己创建的试卷。</p>
+        <p>部分更新试卷元数据。</p>
 
 
 <p><span class="doc-section-title">参数：</span></p>
@@ -4052,7 +4184,7 @@ check_version: 是否在首次连接时校验后端版本兼容性。</p>
 
     <div class="doc doc-contents ">
 
-        <p>软删除试卷。bot 只能删除自己创建的试卷。</p>
+        <p>软删除试卷。</p>
 
 
     </div>
@@ -4579,6 +4711,54 @@ check_version: 是否在首次连接时校验后端版本兼容性。</p>
 <a href="#cphos_qdb.client.AsyncQBClient.update_question_status" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">update_question_status</span><span class="p">(</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">question_id</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n"><span title="str">str</span></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            QuestionDetail (cphos_qdb.models.QuestionDetail)" href="../models/#cphos_qdb.models.QuestionDetail">QuestionDetail</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="cphos_qdb.client.AsyncQBClient.update_question_author" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">update_question_author</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#cphos_qdb.client.AsyncQBClient.update_question_author" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">update_question_author</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">question_id</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">author</span><span class="p">:</span> <span class="n"><span title="str">str</span></span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            QuestionDetail (cphos_qdb.models.QuestionDetail)" href="../models/#cphos_qdb.models.QuestionDetail">QuestionDetail</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="cphos_qdb.client.AsyncQBClient.update_question_reviewer_names" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">update_question_reviewer_names</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#cphos_qdb.client.AsyncQBClient.update_question_reviewer_names" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">update_question_reviewer_names</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">question_id</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">reviewers</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            QuestionDetail (cphos_qdb.models.QuestionDetail)" href="../models/#cphos_qdb.models.QuestionDetail">QuestionDetail</a></span>
 </code></pre></div>
 
