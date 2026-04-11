@@ -19,7 +19,7 @@ from .exceptions import (
 )
 from .models import VersionResponse
 
-SDK_VERSION = "0.2.0"
+SDK_VERSION = "0.2.1"
 EXPECTED_BACKEND_VERSION = "0.2.0"
 
 _STATUS_MAP: dict[int, type[QBError]] = {

@@ -5,7 +5,7 @@
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.0
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.1
 ```
 
 安装最新 `main` 分支：

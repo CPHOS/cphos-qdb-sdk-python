@@ -27,6 +27,7 @@ def _build_question_params(
     paper_id: str | None = None,
     category: str | None = None,
     tag: str | None = None,
+    author: str | None = None,
     reviewer: str | None = None,
     assigned_reviewer_id: str | None = None,
     score_min: int | None = None,
@@ -47,6 +48,7 @@ def _build_question_params(
         "paper_id": paper_id,
         "category": category,
         "tag": tag,
+        "author": author,
         "reviewer": reviewer,
         "assigned_reviewer_id": assigned_reviewer_id,
         "score_min": score_min,
@@ -104,6 +106,7 @@ class QuestionsMixin:
         paper_id: str | None = None,
         category: str | None = None,
         tag: str | None = None,
+        author: str | None = None,
         reviewer: str | None = None,
         assigned_reviewer_id: str | None = None,
         score_min: int | None = None,
@@ -125,7 +128,8 @@ class QuestionsMixin:
             paper_id: 按所属试卷过滤。
             category: 按分类过滤 (`"none"` / `"T"` / `"E"`)。
             tag: 按标签过滤。
-            reviewer: 按审核人过滤。
+            author: 按命题人过滤（支持逗号分隔多值）。
+            reviewer: 按审核人过滤（支持逗号分隔多值）。
             assigned_reviewer_id: 按分配的审阅人 UUID 过滤。
             score_min: 分值下限。
             score_max: 分值上限。
@@ -142,7 +146,8 @@ class QuestionsMixin:
         """
         params = _build_question_params(
             paper_id=paper_id, category=category, tag=tag,
-            reviewer=reviewer, assigned_reviewer_id=assigned_reviewer_id,
+            author=author, reviewer=reviewer,
+            assigned_reviewer_id=assigned_reviewer_id,
             score_min=score_min, score_max=score_max,
             difficulty_tag=difficulty_tag, difficulty_min=difficulty_min,
             difficulty_max=difficulty_max, q=q,
@@ -415,6 +420,7 @@ class AsyncQuestionsMixin:
         paper_id: str | None = None,
         category: str | None = None,
         tag: str | None = None,
+        author: str | None = None,
         reviewer: str | None = None,
         assigned_reviewer_id: str | None = None,
         score_min: int | None = None,
@@ -433,7 +439,8 @@ class AsyncQuestionsMixin:
         """分页查询题目。参见 [`QuestionsMixin.list_questions`][cphos_qdb.questions.QuestionsMixin.list_questions]。"""
         params = _build_question_params(
             paper_id=paper_id, category=category, tag=tag,
-            reviewer=reviewer, assigned_reviewer_id=assigned_reviewer_id,
+            author=author, reviewer=reviewer,
+            assigned_reviewer_id=assigned_reviewer_id,
             score_min=score_min, score_max=score_max,
             difficulty_tag=difficulty_tag, difficulty_min=difficulty_min,
             difficulty_max=difficulty_max, q=q,
