@@ -179,7 +179,7 @@ class TestSystemModels:
 
     def test_version(self):
         v = VersionResponse.model_validate(version_data())
-        assert v.version == "0.1.1"
+        assert v.version == "0.2.0"
 
     def test_message(self):
         m = MessageResponse.model_validate({"message": "done"})

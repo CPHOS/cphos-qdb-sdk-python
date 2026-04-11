@@ -5,7 +5,7 @@
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.1.0
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.0
 ```
 
 安装最新 `main` 分支：
@@ -48,6 +48,8 @@ with QBClient("http://localhost:8080") as client:
     # 更新题目状态与标签
     client.update_question_status(created.question_id, "reviewed")
     client.update_question_tags(created.question_id, ["thermodynamics", "optics"])
+    client.update_question_author(created.question_id, "张三")
+    client.update_question_reviewer_names(created.question_id, ["李四", "王五"])
 
     # 创建难度条目
     client.create_question_difficulty(
@@ -87,6 +89,7 @@ async def main():
         detail = await client.get_question(questions.items[0].question_id)
 
         await client.update_question_status(detail.question_id, "reviewed")
+        await client.update_question_author(detail.question_id, "张三")
 
 asyncio.run(main())
 ```

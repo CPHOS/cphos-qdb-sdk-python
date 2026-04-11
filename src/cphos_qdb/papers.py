@@ -144,7 +144,7 @@ class PapersMixin:
         subtitle: str | None = None,
         question_ids: list[str] | None = None,
     ) -> PaperDetail:
-        """部分更新试卷元数据。bot 只能操作自己创建的试卷。
+        """部分更新试卷元数据。
 
         Args:
             paper_id: 试卷 UUID。
@@ -192,7 +192,7 @@ class PapersMixin:
         return PaperFileReplaceResult.model_validate(resp.json())
 
     def delete_paper(self, paper_id: str) -> PaperDeleteResult:
-        """软删除试卷。bot 只能删除自己创建的试卷。"""
+        """软删除试卷。"""
         return PaperDeleteResult.model_validate(
             self._t.delete(f"/papers/{paper_id}").json()
         )

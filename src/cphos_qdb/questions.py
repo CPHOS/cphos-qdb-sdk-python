@@ -242,6 +242,24 @@ class QuestionsMixin:
             ).json()
         )
 
+    def update_question_author(self, question_id: str, author: str) -> QuestionDetail:
+        """更新题目命题人。"""
+        return QuestionDetail.model_validate(
+            self._t.patch(
+                f"/questions/{question_id}/author",
+                json_body={"author": author},
+            ).json()
+        )
+
+    def update_question_reviewer_names(self, question_id: str, reviewers: list[str]) -> QuestionDetail:
+        """整体替换题目审题人显示名列表。"""
+        return QuestionDetail.model_validate(
+            self._t.patch(
+                f"/questions/{question_id}/reviewer-names",
+                json_body={"reviewers": reviewers},
+            ).json()
+        )
+
     def create_question_difficulty(
         self,
         question_id: str,
@@ -490,6 +508,22 @@ class AsyncQuestionsMixin:
             (await self._t.patch(
                 f"/questions/{question_id}/status",
                 json_body={"status": status},
+            )).json()
+        )
+
+    async def update_question_author(self, question_id: str, author: str) -> QuestionDetail:
+        return QuestionDetail.model_validate(
+            (await self._t.patch(
+                f"/questions/{question_id}/author",
+                json_body={"author": author},
+            )).json()
+        )
+
+    async def update_question_reviewer_names(self, question_id: str, reviewers: list[str]) -> QuestionDetail:
+        return QuestionDetail.model_validate(
+            (await self._t.patch(
+                f"/questions/{question_id}/reviewer-names",
+                json_body={"reviewers": reviewers},
             )).json()
         )
 

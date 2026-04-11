@@ -19,8 +19,8 @@ from .exceptions import (
 )
 from .models import VersionResponse
 
-SDK_VERSION = "0.1.0"
-EXPECTED_BACKEND_VERSION = "0.1.1"
+SDK_VERSION = "0.2.0"
+EXPECTED_BACKEND_VERSION = "0.2.0"
 
 _STATUS_MAP: dict[int, type[QBError]] = {
     400: QBValidationError,

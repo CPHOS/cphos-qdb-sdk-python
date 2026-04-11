@@ -178,6 +178,32 @@ class TestQuestionsMixin:
         client.close()
 
     @respx.mock(base_url=BASE_URL)
+    def test_update_question_author(self, respx_mock):
+        respx_mock.patch("/questions/q-001/author").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.update_question_author("q-001", "张三")
+        assert detail.question_id == "q-001"
+        req = respx_mock.calls.last.request
+        assert json.loads(req.content) == {"author": "张三"}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    def test_update_question_reviewer_names(self, respx_mock):
+        respx_mock.patch("/questions/q-001/reviewer-names").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = QBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = client.update_question_reviewer_names("q-001", ["李四", "王五"])
+        assert detail.question_id == "q-001"
+        req = respx_mock.calls.last.request
+        assert json.loads(req.content) == {"reviewers": ["李四", "王五"]}
+        client.close()
+
+    @respx.mock(base_url=BASE_URL)
     def test_create_question_difficulty(self, respx_mock):
         respx_mock.post("/questions/q-001/difficulties").mock(
             return_value=httpx.Response(200, json=question_detail_data())
@@ -381,6 +407,28 @@ class TestAsyncQuestionsMixin:
         client = AsyncQBClient(BASE_URL, check_version=False)
         client._t.set_tokens("acc", "ref")
         detail = await client.update_question_status("q-001", "reviewed")
+        assert detail.question_id == "q-001"
+        await client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    async def test_update_question_author(self, respx_mock):
+        respx_mock.patch("/questions/q-001/author").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = AsyncQBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = await client.update_question_author("q-001", "张三")
+        assert detail.question_id == "q-001"
+        await client.close()
+
+    @respx.mock(base_url=BASE_URL)
+    async def test_update_question_reviewer_names(self, respx_mock):
+        respx_mock.patch("/questions/q-001/reviewer-names").mock(
+            return_value=httpx.Response(200, json=question_detail_data())
+        )
+        client = AsyncQBClient(BASE_URL, check_version=False)
+        client._t.set_tokens("acc", "ref")
+        detail = await client.update_question_reviewer_names("q-001", ["李四", "王五"])
         assert detail.question_id == "q-001"
         await client.close()
 

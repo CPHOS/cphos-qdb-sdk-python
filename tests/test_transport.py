@@ -100,7 +100,7 @@ class TestSyncTransport:
 
     @respx.mock(base_url=BASE_URL)
     def test_version_check_before_first_request(self, respx_mock):
-        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "0.1.1"}))
+        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "0.2.0"}))
         respx_mock.get("/health").mock(return_value=httpx.Response(200, json={"status": "ok"}))
         t = SyncTransport(BASE_URL)
         resp = t.get("/health")
@@ -165,7 +165,7 @@ class TestAsyncTransport:
 
     @respx.mock(base_url=BASE_URL)
     async def test_async_version_check_before_first_request(self, respx_mock):
-        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "0.1.1"}))
+        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "0.2.0"}))
         respx_mock.get("/health").mock(return_value=httpx.Response(200, json={"status": "ok"}))
         t = AsyncTransport(BASE_URL)
         resp = await t.get("/health")

@@ -28,7 +28,7 @@ def token_data() -> dict[str, Any]:
     }
 
 
-def version_data(version: str = "0.1.1") -> dict[str, Any]:
+def version_data(version: str = "0.2.0") -> dict[str, Any]:
     return {"version": version}
 
 

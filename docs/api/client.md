@@ -22,6 +22,8 @@
         - update_question_category
         - update_question_tags
         - update_question_status
+        - update_question_author
+        - update_question_reviewer_names
         - create_question_difficulty
         - update_question_difficulty
         - delete_question_difficulty
@@ -64,6 +66,8 @@
         - update_question_category
         - update_question_tags
         - update_question_status
+        - update_question_author
+        - update_question_reviewer_names
         - create_question_difficulty
         - update_question_difficulty
         - delete_question_difficulty
