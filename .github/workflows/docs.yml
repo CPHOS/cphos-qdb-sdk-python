@@ -46,8 +46,9 @@ jobs:
       - name: Deploy docs as dev (main branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          uv run mike deploy --push --allow-empty --update-aliases dev latest
-          uv run mike set-default --push --allow-empty latest
+          uv run mike deploy --allow-empty --update-aliases dev latest
+          uv run mike set-default --allow-empty latest
+          git push origin gh-pages
           uv run mike list
 
       - name: Deploy docs for tag release
@@ -55,8 +56,9 @@ jobs:
         env:
           VERSION: ${{ github.ref_name }}
         run: |
-          uv run mike deploy --push --allow-empty --update-aliases "$VERSION" latest
-          uv run mike set-default --push --allow-empty latest
+          uv run mike deploy --allow-empty --update-aliases "$VERSION" latest
+          uv run mike set-default --allow-empty latest
+          git push origin gh-pages
           uv run mike list
 
       - name: Deploy docs for manual version
@@ -64,6 +66,7 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
-          uv run mike deploy --push --allow-empty --update-aliases "$VERSION" latest
-          uv run mike set-default --push --allow-empty latest
+          uv run mike deploy --allow-empty --update-aliases "$VERSION" latest
+          uv run mike set-default --allow-empty latest
+          git push origin gh-pages
           uv run mike list
