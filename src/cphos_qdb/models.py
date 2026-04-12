@@ -134,7 +134,7 @@ class QuestionAssetRef(BaseModel):
     """文件类型。"""
     object_id: str
     """对象存储 ID。"""
-    mime_type: str
+    mime_type: str | None = None
     """MIME 类型。"""
 
 

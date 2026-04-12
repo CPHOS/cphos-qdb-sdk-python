@@ -1,6 +1,6 @@
 # CPHOS Question Bank SDK
 
-[![SDK Version](https://img.shields.io/github/v/release/CPHOS/cphos-qdb-sdk-python?label=SDK&logo=github)](https://github.com/CPHOS/cphos-qdb-sdk-python/releases)
+[![SDK Version](https://img.shields.io/badge/SDK-0.2.2-blue?logo=github)](https://github.com/CPHOS/cphos-qdb-sdk-python/releases)
 [![Backend Compatibility](https://img.shields.io/badge/Backend-Question_DB%20%3E%3D%200.2.0-2ea44f?logo=github)](https://github.com/CPHOS/Question_DB)
 
 面向 CPHOS 题库系统 bot 账号的 Python SDK，提供同步与异步两套客户端。
@@ -19,7 +19,7 @@
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.1
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.2
 ```
 
 安装最新 `main` 分支：
@@ -61,8 +61,6 @@ uv run mike serve
 - 要求后端主版本与 SDK 兼容要求一致
 - 在主版本一致前提下，后端版本需大于等于 SDK 声明的最低兼容后端版本
 - 首次请求会自动检查 `/version`，不兼容时抛出 `QBVersionError`
-
-当前文档对应版本：
 
 后端项目：[Question_DB](https://github.com/CPHOS/Question_DB)
 

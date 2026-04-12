@@ -2,7 +2,7 @@
 <div align="center">
     <h1>cphos-qdb SDK</h1>
     <p>Python SDK for CPHOS Question Bank API (bot account)</p>
-    <a href="https://github.com/CPHOS/cphos-qdb-sdk-python/releases"><img src="https://img.shields.io/github/v/release/CPHOS/cphos-qdb-sdk-python?label=SDK&logo=github" alt="SDK Version"></a>
+    <a href="https://github.com/CPHOS/cphos-qdb-sdk-python/releases"><img src="https://img.shields.io/badge/SDK-0.2.2-blue?logo=github" alt="SDK Version"></a>
     <a href="https://github.com/CPHOS/Question_DB"><img src="https://img.shields.io/badge/Backend-Question_DB%20%3E%3D%200.2.0-2ea44f?logo=github" alt="Backend Compatibility"></a>
 </div>
 
@@ -27,13 +27,13 @@ uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git
 也可通过 pip 安装：
 
 ```bash
-pip install git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.1
+pip install git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.2
 ```
 
 或从 [GitHub Releases](https://github.com/CPHOS/cphos-qdb-sdk-python/releases) 下载 `.whl` 文件后本地安装：
 
 ```bash
-uv add ./cphos_qdb-0.2.1-py3-none-any.whl
+uv add ./cphos_qdb-0.2.2-py3-none-any.whl
 ```
 
 ## 快速使用
@@ -69,7 +69,7 @@ with QBClient("http://localhost:8080") as client:
 文档使用 `mike` 进行版本化发布，支持在站点中切换不同版本。
 
 - 推送到 `main`：自动发布 `dev`（并更新 `latest` 别名）
-- 推送 `v*` tag（如 `v0.2.1`）：自动发布对应版本并更新 `latest`
+- 推送 `v*` tag（如 `v0.2.2`）：自动发布对应版本并更新 `latest`
 - `workflow_dispatch`：可手动输入版本号发布
 
 首次启用时，请将仓库 GitHub Pages 来源设置为：`gh-pages` 分支 / 根目录。
