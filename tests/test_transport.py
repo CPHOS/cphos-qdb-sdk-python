@@ -18,18 +18,21 @@ class TestSyncTransport:
         assert t._auth_headers == {}
         t.close()
 
-    def test_auth_headers_after_set_tokens(self):
-        t = SyncTransport(BASE_URL, check_version=False)
-        t.set_tokens("acc123", "ref456")
-        assert t._auth_headers == {"Authorization": "Bearer acc123"}
+    def test_auth_headers_with_constructor_token(self):
+        t = SyncTransport(BASE_URL, access_token="bot-token", check_version=False)
+        assert t._auth_headers == {"Authorization": "Bearer bot-token"}
         t.close()
 
-    def test_clear_tokens(self):
+    def test_set_access_token(self):
         t = SyncTransport(BASE_URL, check_version=False)
-        t.set_tokens("acc", "ref")
-        t.clear_tokens()
+        t.set_access_token("new-token")
+        assert t._access_token == "new-token"
+        t.close()
+
+    def test_clear_access_token(self):
+        t = SyncTransport(BASE_URL, access_token="tok", check_version=False)
+        t.clear_access_token()
         assert t._access_token is None
-        assert t._refresh_token is None
         t.close()
 
     @respx.mock(base_url=BASE_URL)
@@ -49,31 +52,7 @@ class TestSyncTransport:
         t.close()
 
     @respx.mock(base_url=BASE_URL)
-    def test_auto_token_refresh_on_401(self, respx_mock):
-        # First request returns 401
-        respx_mock.get("/data").mock(
-            side_effect=[
-                httpx.Response(401, json={"error": "expired"}),
-                httpx.Response(200, json={"result": "ok"}),
-            ]
-        )
-        # Refresh succeeds
-        respx_mock.post("/auth/refresh").mock(
-            return_value=httpx.Response(200, json={
-                "access_token": "new_acc",
-                "refresh_token": "new_ref",
-            })
-        )
-        t = SyncTransport(BASE_URL, check_version=False)
-        t.set_tokens("old_acc", "old_ref")
-        resp = t.get("/data")
-        assert resp.json() == {"result": "ok"}
-        assert t._access_token == "new_acc"
-        assert t._refresh_token == "new_ref"
-        t.close()
-
-    @respx.mock(base_url=BASE_URL)
-    def test_401_without_refresh_token_raises(self, respx_mock):
+    def test_401_raises_auth_error(self, respx_mock):
         respx_mock.get("/data").mock(return_value=httpx.Response(401, json={"error": "no auth"}))
         t = SyncTransport(BASE_URL, check_version=False)
         with pytest.raises(QBAuthError):
@@ -100,7 +79,7 @@ class TestSyncTransport:
 
     @respx.mock(base_url=BASE_URL)
     def test_version_check_before_first_request(self, respx_mock):
-        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "0.2.0"}))
+        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "1.0.0"}))
         respx_mock.get("/health").mock(return_value=httpx.Response(200, json={"status": "ok"}))
         t = SyncTransport(BASE_URL)
         resp = t.get("/health")
@@ -110,7 +89,7 @@ class TestSyncTransport:
 
     @respx.mock(base_url=BASE_URL)
     def test_version_check_rejects_incompatible_backend(self, respx_mock):
-        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "1.0.0"}))
+        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "2.0.0"}))
         t = SyncTransport(BASE_URL)
         with pytest.raises(QBVersionError):
             t.get("/health")
@@ -122,8 +101,13 @@ class TestAsyncTransport:
     async def test_auth_headers(self):
         t = AsyncTransport(BASE_URL, check_version=False)
         assert t._auth_headers == {}
-        t.set_tokens("acc", "ref")
+        t.set_access_token("acc")
         assert t._auth_headers == {"Authorization": "Bearer acc"}
+        await t.close()
+
+    async def test_constructor_token(self):
+        t = AsyncTransport(BASE_URL, access_token="bot-tok", check_version=False)
+        assert t._access_token == "bot-tok"
         await t.close()
 
     @respx.mock(base_url=BASE_URL)
@@ -135,24 +119,11 @@ class TestAsyncTransport:
         await t.close()
 
     @respx.mock(base_url=BASE_URL)
-    async def test_auto_refresh_on_401(self, respx_mock):
-        respx_mock.get("/data").mock(
-            side_effect=[
-                httpx.Response(401, json={"error": "expired"}),
-                httpx.Response(200, json={"ok": True}),
-            ]
-        )
-        respx_mock.post("/auth/refresh").mock(
-            return_value=httpx.Response(200, json={
-                "access_token": "new_acc",
-                "refresh_token": "new_ref",
-            })
-        )
+    async def test_401_raises_auth_error(self, respx_mock):
+        respx_mock.get("/data").mock(return_value=httpx.Response(401, json={"error": "expired"}))
         t = AsyncTransport(BASE_URL, check_version=False)
-        t.set_tokens("old", "old_ref")
-        resp = await t.get("/data")
-        assert resp.json() == {"ok": True}
-        assert t._access_token == "new_acc"
+        with pytest.raises(QBAuthError):
+            await t.get("/data")
         await t.close()
 
     @respx.mock(base_url=BASE_URL)
@@ -165,7 +136,7 @@ class TestAsyncTransport:
 
     @respx.mock(base_url=BASE_URL)
     async def test_async_version_check_before_first_request(self, respx_mock):
-        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "0.2.0"}))
+        respx_mock.get("/version").mock(return_value=httpx.Response(200, json={"version": "1.0.0"}))
         respx_mock.get("/health").mock(return_value=httpx.Response(200, json={"status": "ok"}))
         t = AsyncTransport(BASE_URL)
         resp = await t.get("/health")

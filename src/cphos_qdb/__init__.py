@@ -23,7 +23,6 @@ from .models import (
     QuestionSummary,
     ReviewerInfo,
     ReviewersResponse,
-    TokenResponse,
     UserProfile,
     VersionResponse,
 )
@@ -50,7 +49,6 @@ __all__ = [
     "QuestionSummary",
     "ReviewerInfo",
     "ReviewersResponse",
-    "TokenResponse",
     "UserProfile",
     "VersionResponse",
 ]

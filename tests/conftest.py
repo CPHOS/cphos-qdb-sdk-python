@@ -28,7 +28,7 @@ def token_data() -> dict[str, Any]:
     }
 
 
-def version_data(version: str = "0.2.0") -> dict[str, Any]:
+def version_data(version: str = "1.0.0") -> dict[str, Any]:
     return {"version": version}
 
 
@@ -132,7 +132,7 @@ def mock_api():
 
 @pytest.fixture()
 def sync_client():
-    """Pre-configured sync client (not logged in)."""
+    """Pre-configured sync client (no token)."""
     client = QBClient(BASE_URL, check_version=False)
     yield client
     client.close()
@@ -140,20 +140,20 @@ def sync_client():
 
 @pytest.fixture()
 def async_client():
-    """Pre-configured async client (not logged in)."""
+    """Pre-configured async client (no token)."""
     client = AsyncQBClient(BASE_URL, check_version=False)
     yield client
 
 
 @pytest.fixture()
 def authed_sync_client(mock_api, sync_client):
-    """Sync client with tokens already set (skips login HTTP call)."""
-    sync_client._t.set_tokens("acc_test_123", "ref_test_456")
+    """Sync client with bot access token already set."""
+    sync_client._t.set_access_token("acc_test_123")
     return sync_client
 
 
 @pytest.fixture()
 def authed_async_client(mock_api, async_client):
-    """Async client with tokens already set."""
-    async_client._t.set_tokens("acc_test_123", "ref_test_456")
+    """Async client with bot access token already set."""
+    async_client._t.set_access_token("acc_test_123")
     return async_client

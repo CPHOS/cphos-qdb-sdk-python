@@ -60,7 +60,7 @@ class TestQBClient:
     @respx.mock(base_url=BASE_URL)
     def test_version_check_fails_on_major_mismatch(self, respx_mock):
         respx_mock.get("/version").mock(
-            return_value=httpx.Response(200, json=version_data("1.0.0"))
+            return_value=httpx.Response(200, json=version_data("2.0.0"))
         )
         client = QBClient(BASE_URL)
         with pytest.raises(QBVersionError):

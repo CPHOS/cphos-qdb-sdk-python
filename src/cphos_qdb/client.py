@@ -20,17 +20,17 @@ EXPECTED_API_VERSION = EXPECTED_BACKEND_VERSION
 class QBClient(AuthMixin, QuestionsMixin, PapersMixin):
     """同步题库客户端，面向 bot 账号。
 
+    Bot 账号使用管理员签发的 access token 认证，无需用户名密码登录。
+
     用法::
 
-        client = QBClient("http://localhost:8080")
-        client.login("bot_user", "bot_password")
+        client = QBClient("http://localhost:8080", access_token="bot-token-xxx")
         questions = client.list_questions(category="T")
         client.close()
 
     或作为上下文管理器::
 
-        with QBClient("http://localhost:8080") as c:
-            c.login("bot", "pass")
+        with QBClient("http://localhost:8080", access_token="bot-token-xxx") as c:
             ...
     """
 
@@ -38,15 +38,20 @@ class QBClient(AuthMixin, QuestionsMixin, PapersMixin):
         self,
         base_url: str,
         *,
+        access_token: str | None = None,
         timeout: float = 30.0,
         check_version: bool = True,
     ) -> None:
         """Args:
             base_url: API 服务地址，如 `http://localhost:8080`。
+            access_token: 管理员签发的 bot access token。
             timeout: HTTP 请求超时时间（秒）。
             check_version: 是否在首次连接时校验后端版本兼容性。
         """
-        self._t = SyncTransport(base_url, timeout=timeout, check_version=check_version)
+        self._t = SyncTransport(
+            base_url, access_token=access_token,
+            timeout=timeout, check_version=check_version,
+        )
 
     def close(self) -> None:
         """关闭 HTTP 连接。"""
@@ -72,8 +77,7 @@ class AsyncQBClient(AsyncAuthMixin, AsyncQuestionsMixin, AsyncPapersMixin):
 
     用法::
 
-        async with AsyncQBClient("http://localhost:8080") as c:
-            await c.login("bot", "pass")
+        async with AsyncQBClient("http://localhost:8080", access_token="bot-token-xxx") as c:
             questions = await c.list_questions(category="T")
     """
 
@@ -81,10 +85,14 @@ class AsyncQBClient(AsyncAuthMixin, AsyncQuestionsMixin, AsyncPapersMixin):
         self,
         base_url: str,
         *,
+        access_token: str | None = None,
         timeout: float = 30.0,
         check_version: bool = True,
     ) -> None:
-        self._t = AsyncTransport(base_url, timeout=timeout, check_version=check_version)
+        self._t = AsyncTransport(
+            base_url, access_token=access_token,
+            timeout=timeout, check_version=check_version,
+        )
 
     async def close(self) -> None:
         await self._t.close()

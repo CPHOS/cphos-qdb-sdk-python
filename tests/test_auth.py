@@ -7,83 +7,21 @@ import pytest
 import respx
 
 from cphos_qdb import AsyncQBClient, QBClient
-from cphos_qdb.exceptions import QBAuthError
-from cphos_qdb.models import MessageResponse, TokenResponse, UserProfile
+from cphos_qdb.models import UserProfile
 
-from .conftest import BASE_URL, token_data, user_profile_data
+from .conftest import BASE_URL, user_profile_data
 
 
 class TestAuthMixin:
-    @respx.mock(base_url=BASE_URL)
-    def test_login_success(self, respx_mock):
-        respx_mock.post("/auth/login").mock(
-            return_value=httpx.Response(200, json=token_data())
-        )
-        client = QBClient(BASE_URL, check_version=False)
-        tok = client.login("bot", "pass")
-        assert isinstance(tok, TokenResponse)
-        assert tok.access_token == "acc_test_123"
-        assert client._t._access_token == "acc_test_123"
-        assert client._t._refresh_token == "ref_test_456"
-        client.close()
-
-    @respx.mock(base_url=BASE_URL)
-    def test_login_sends_credentials(self, respx_mock):
-        respx_mock.post("/auth/login").mock(
-            return_value=httpx.Response(200, json=token_data())
-        )
-        client = QBClient(BASE_URL, check_version=False)
-        client.login("myuser", "mypass")
-        req = respx_mock.calls.last.request
-        import json
-        body = json.loads(req.content)
-        assert body == {"username": "myuser", "password": "mypass"}
-        client.close()
-
-    @respx.mock(base_url=BASE_URL)
-    def test_login_wrong_password(self, respx_mock):
-        respx_mock.post("/auth/login").mock(
-            return_value=httpx.Response(401, json={"error": "invalid credentials"})
-        )
-        client = QBClient(BASE_URL, check_version=False)
-        with pytest.raises(QBAuthError):
-            client.login("bot", "wrong")
-        client.close()
-
-    @respx.mock(base_url=BASE_URL)
-    def test_logout(self, respx_mock):
-        respx_mock.post("/auth/logout").mock(
-            return_value=httpx.Response(200, json={"message": "logged out"})
-        )
-        client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
-        result = client.logout()
-        assert isinstance(result, MessageResponse)
-        assert result.message == "logged out"
-        assert client._t._access_token is None
-        client.close()
-
     @respx.mock(base_url=BASE_URL)
     def test_me(self, respx_mock):
         respx_mock.get("/auth/me").mock(
             return_value=httpx.Response(200, json=user_profile_data())
         )
-        client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client = QBClient(BASE_URL, access_token="bot-token", check_version=False)
         profile = client.me()
         assert isinstance(profile, UserProfile)
         assert profile.username == "bot_user"
-        client.close()
-
-    @respx.mock(base_url=BASE_URL)
-    def test_change_password(self, respx_mock):
-        respx_mock.patch("/auth/me/password").mock(
-            return_value=httpx.Response(200, json={"message": "password updated"})
-        )
-        client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
-        result = client.change_password("old", "newpass")
-        assert result.message == "password updated"
         client.close()
 
     @respx.mock(base_url=BASE_URL)
@@ -92,8 +30,7 @@ class TestAuthMixin:
         respx_mock.get("/users/search").mock(
             return_value=httpx.Response(200, json=user_list)
         )
-        client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client = QBClient(BASE_URL, access_token="bot-token", check_version=False)
         result = client.search_users("alice", limit=10, offset=0)
         assert result["total"] == 1
         req = respx_mock.calls.last.request
@@ -101,52 +38,22 @@ class TestAuthMixin:
         assert "limit=10" in str(req.url)
         client.close()
 
+    def test_access_token_via_constructor(self):
+        client = QBClient(BASE_URL, access_token="my-bot-token", check_version=False)
+        assert client._t._access_token == "my-bot-token"
+        client.close()
+
 
 @pytest.mark.asyncio
 class TestAsyncAuthMixin:
-    @respx.mock(base_url=BASE_URL)
-    async def test_login_success(self, respx_mock):
-        respx_mock.post("/auth/login").mock(
-            return_value=httpx.Response(200, json=token_data())
-        )
-        client = AsyncQBClient(BASE_URL, check_version=False)
-        tok = await client.login("bot", "pass")
-        assert isinstance(tok, TokenResponse)
-        assert client._t._access_token == "acc_test_123"
-        await client.close()
-
-    @respx.mock(base_url=BASE_URL)
-    async def test_logout(self, respx_mock):
-        respx_mock.post("/auth/logout").mock(
-            return_value=httpx.Response(200, json={"message": "ok"})
-        )
-        client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
-        result = await client.logout()
-        assert result.message == "ok"
-        assert client._t._access_token is None
-        await client.close()
-
     @respx.mock(base_url=BASE_URL)
     async def test_me(self, respx_mock):
         respx_mock.get("/auth/me").mock(
             return_value=httpx.Response(200, json=user_profile_data())
         )
-        client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client = AsyncQBClient(BASE_URL, access_token="bot-token", check_version=False)
         profile = await client.me()
         assert profile.role == "bot"
-        await client.close()
-
-    @respx.mock(base_url=BASE_URL)
-    async def test_change_password(self, respx_mock):
-        respx_mock.patch("/auth/me/password").mock(
-            return_value=httpx.Response(200, json={"message": "updated"})
-        )
-        client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
-        result = await client.change_password("old", "new123")
-        assert result.message == "updated"
         await client.close()
 
     @respx.mock(base_url=BASE_URL)
@@ -154,8 +61,12 @@ class TestAsyncAuthMixin:
         respx_mock.get("/users/search").mock(
             return_value=httpx.Response(200, json={"users": [], "total": 0})
         )
-        client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client = AsyncQBClient(BASE_URL, access_token="bot-token", check_version=False)
         result = await client.search_users("nobody")
         assert result["total"] == 0
+        await client.close()
+
+    async def test_access_token_via_constructor(self):
+        client = AsyncQBClient(BASE_URL, access_token="my-bot-token", check_version=False)
+        assert client._t._access_token == "my-bot-token"
         await client.close()

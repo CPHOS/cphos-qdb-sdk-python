@@ -1,7 +1,7 @@
 # CPHOS Question Bank SDK
 
-[![SDK Version](https://img.shields.io/badge/SDK-0.2.2-blue?logo=github)](https://github.com/CPHOS/cphos-qdb-sdk-python/releases)
-[![Backend Compatibility](https://img.shields.io/badge/Backend-Question_DB%20%3E%3D%200.2.0-2ea44f?logo=github)](https://github.com/CPHOS/Question_DB)
+[![SDK Version](https://img.shields.io/badge/SDK-1.0.0-blue?logo=github)](https://github.com/CPHOS/cphos-qdb-sdk-python/releases)
+[![Backend Compatibility](https://img.shields.io/badge/Backend-Question_DB%20%3E%3D%201.0.0-2ea44f?logo=github)](https://github.com/CPHOS/Question_DB)
 
 面向 CPHOS 题库系统 bot 账号的 Python SDK，提供同步与异步两套客户端。
 
@@ -9,7 +9,6 @@
 
 - **完整 API 覆盖** — bot 可用的认证、题目、试卷、审阅人管理、Bundle 下载
 - **同步 + 异步** — `QBClient`（同步）和 `AsyncQBClient`（异步）
-- **自动 Token 刷新** — access token 过期时自动使用 refresh token 换新
 - **自动版本协商** — 首次请求前自动校验后端 `/version` 与 SDK 兼容性
 - **类型安全** — 所有响应使用 Pydantic v2 模型，完整类型提示
 - **统一异常** — HTTP 错误码映射为语义化异常类
@@ -19,7 +18,7 @@
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.2
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v1.0.0
 ```
 
 安装最新 `main` 分支：

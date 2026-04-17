@@ -59,7 +59,7 @@ class TestPapersMixin:
             return_value=httpx.Response(200, json=paginated_response(items, total=2))
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         result = client.list_papers(category="T", limit=20)
         assert isinstance(result, PaginatedResponse)
         assert len(result.items) == 2
@@ -72,7 +72,7 @@ class TestPapersMixin:
             return_value=httpx.Response(200, json=paper_detail_data())
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         detail = client.get_paper("p-001")
         assert isinstance(detail, PaperDetail)
         assert detail.title == "综合训练 2026"
@@ -90,7 +90,7 @@ class TestPapersMixin:
             })
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         result = client.create_paper(
             description="test paper",
             title="Title",
@@ -113,7 +113,7 @@ class TestPapersMixin:
             })
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         fake_zip = io.BytesIO(b"PK\x03\x04fake")
         result = client.create_paper(
             description="with file",
@@ -131,7 +131,7 @@ class TestPapersMixin:
             return_value=httpx.Response(200, json=paper_detail_data())
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         detail = client.update_paper("p-001", title="New Title")
         assert isinstance(detail, PaperDetail)
         req = respx_mock.calls.last.request
@@ -145,7 +145,7 @@ class TestPapersMixin:
             return_value=httpx.Response(200, json=paper_detail_data())
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         client.update_paper("p-001", question_ids=["q-001", "q-002"])
         req = respx_mock.calls.last.request
         body = json.loads(req.content)
@@ -162,7 +162,7 @@ class TestPapersMixin:
             })
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         result = client.replace_paper_file("p-001", io.BytesIO(b"PK"))
         assert isinstance(result, PaperFileReplaceResult)
         assert result.status == "replaced"
@@ -174,7 +174,7 @@ class TestPapersMixin:
             return_value=httpx.Response(200, json={"paper_id": "p-001", "status": "deleted"})
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         result = client.delete_paper("p-001")
         assert isinstance(result, PaperDeleteResult)
         assert result.status == "deleted"
@@ -186,7 +186,7 @@ class TestPapersMixin:
             return_value=httpx.Response(200, content=b"PAPER_ZIP")
         )
         client = QBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         dest = tmp_path / "papers.zip"
         result = client.download_paper_bundle(["p-001"], str(dest))
         assert result == dest
@@ -205,7 +205,7 @@ class TestAsyncPapersMixin:
             return_value=httpx.Response(200, json=paginated_response(items))
         )
         client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         result = await client.list_papers(q="综合")
         assert len(result.items) == 1
         await client.close()
@@ -216,7 +216,7 @@ class TestAsyncPapersMixin:
             return_value=httpx.Response(200, json=paper_detail_data())
         )
         client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         detail = await client.get_paper("p-001")
         assert detail.paper_id == "p-001"
         await client.close()
@@ -232,7 +232,7 @@ class TestAsyncPapersMixin:
             })
         )
         client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         result = await client.create_paper(
             description="async paper",
             title="T",
@@ -248,7 +248,7 @@ class TestAsyncPapersMixin:
             return_value=httpx.Response(200, json=paper_detail_data())
         )
         client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         detail = await client.update_paper("p-001", subtitle="B 卷")
         assert detail.paper_id == "p-001"
         await client.close()
@@ -259,7 +259,7 @@ class TestAsyncPapersMixin:
             return_value=httpx.Response(200, json={"paper_id": "p-001", "status": "deleted"})
         )
         client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         result = await client.delete_paper("p-001")
         assert result.status == "deleted"
         await client.close()
@@ -270,7 +270,7 @@ class TestAsyncPapersMixin:
             return_value=httpx.Response(200, content=b"DATA")
         )
         client = AsyncQBClient(BASE_URL, check_version=False)
-        client._t.set_tokens("acc", "ref")
+        client._t.set_access_token("acc")
         dest = tmp_path / "out.zip"
         await client.download_paper_bundle(["p-001"], str(dest))
         assert dest.read_bytes() == b"DATA"

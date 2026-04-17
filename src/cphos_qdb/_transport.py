@@ -19,8 +19,8 @@ from .exceptions import (
 )
 from .models import VersionResponse
 
-SDK_VERSION = "0.2.2"
-EXPECTED_BACKEND_VERSION = "0.2.0"
+SDK_VERSION = "1.0.0"
+EXPECTED_BACKEND_VERSION = "1.0.0"
 
 _STATUS_MAP: dict[int, type[QBError]] = {
     400: QBValidationError,
@@ -65,20 +65,20 @@ def _is_compatible_version(expected: str, actual: str) -> bool:
 # ── Sync Transport ────────────────────────────────────────────────────────
 
 class SyncTransport:
-    """同步 HTTP 传输层，支持自动令牌刷新。"""
+    """同步 HTTP 传输层。"""
 
     def __init__(
         self,
         base_url: str,
         *,
+        access_token: str | None = None,
         timeout: float = 30.0,
         sdk_version: str = SDK_VERSION,
         expected_backend_version: str = EXPECTED_BACKEND_VERSION,
         check_version: bool = True,
     ) -> None:
         self.base_url = base_url.rstrip("/")
-        self._access_token: str | None = None
-        self._refresh_token: str | None = None
+        self._access_token: str | None = access_token
         self._client = httpx.Client(base_url=self.base_url, timeout=timeout)
         self._sdk_version = sdk_version
         self._expected_backend_version = expected_backend_version
@@ -90,33 +90,19 @@ class SyncTransport:
 
     # ── token helpers ─────────────────────────────────────────────────────
 
-    def set_tokens(self, access: str, refresh: str) -> None:
-        self._access_token = access
-        self._refresh_token = refresh
+    def set_access_token(self, token: str) -> None:
+        """设置 bot access token。"""
+        self._access_token = token
 
-    def clear_tokens(self) -> None:
+    def clear_access_token(self) -> None:
+        """清除 access token。"""
         self._access_token = None
-        self._refresh_token = None
 
     @property
     def _auth_headers(self) -> dict[str, str]:
         if self._access_token:
             return {"Authorization": f"Bearer {self._access_token}"}
         return {}
-
-    def _do_refresh(self) -> bool:
-        if not self._refresh_token:
-            return False
-        resp = self._client.post(
-            "/auth/refresh",
-            json={"refresh_token": self._refresh_token},
-        )
-        if not resp.is_success:
-            return False
-        data = resp.json()
-        self._access_token = data["access_token"]
-        self._refresh_token = data["refresh_token"]
-        return True
 
     def get_version(self) -> VersionResponse:
         resp = self._client.get("/version")
@@ -164,17 +150,10 @@ class SyncTransport:
 
         if stream:
             resp = self._client.stream(method, path, **kwargs).__enter__()
-            if resp.status_code == 401 and self._do_refresh():
-                resp.close()
-                kwargs["headers"] = self._auth_headers
-                resp = self._client.stream(method, path, **kwargs).__enter__()
             _raise_for_status(resp)
             return resp
 
         resp = self._client.request(method, path, **kwargs)
-        if resp.status_code == 401 and self._do_refresh():
-            kwargs["headers"] = self._auth_headers
-            resp = self._client.request(method, path, **kwargs)
         _raise_for_status(resp)
         return resp
 
@@ -199,20 +178,20 @@ class SyncTransport:
 # ── Async Transport ───────────────────────────────────────────────────────
 
 class AsyncTransport:
-    """异步 HTTP 传输层，支持自动令牌刷新。"""
+    """异步 HTTP 传输层。"""
 
     def __init__(
         self,
         base_url: str,
         *,
+        access_token: str | None = None,
         timeout: float = 30.0,
         sdk_version: str = SDK_VERSION,
         expected_backend_version: str = EXPECTED_BACKEND_VERSION,
         check_version: bool = True,
     ) -> None:
         self.base_url = base_url.rstrip("/")
-        self._access_token: str | None = None
-        self._refresh_token: str | None = None
+        self._access_token: str | None = access_token
         self._client = httpx.AsyncClient(base_url=self.base_url, timeout=timeout)
         self._sdk_version = sdk_version
         self._expected_backend_version = expected_backend_version
@@ -224,33 +203,19 @@ class AsyncTransport:
 
     # ── token helpers ─────────────────────────────────────────────────────
 
-    def set_tokens(self, access: str, refresh: str) -> None:
-        self._access_token = access
-        self._refresh_token = refresh
+    def set_access_token(self, token: str) -> None:
+        """设置 bot access token。"""
+        self._access_token = token
 
-    def clear_tokens(self) -> None:
+    def clear_access_token(self) -> None:
+        """清除 access token。"""
         self._access_token = None
-        self._refresh_token = None
 
     @property
     def _auth_headers(self) -> dict[str, str]:
         if self._access_token:
             return {"Authorization": f"Bearer {self._access_token}"}
         return {}
-
-    async def _do_refresh(self) -> bool:
-        if not self._refresh_token:
-            return False
-        resp = await self._client.post(
-            "/auth/refresh",
-            json={"refresh_token": self._refresh_token},
-        )
-        if not resp.is_success:
-            return False
-        data = resp.json()
-        self._access_token = data["access_token"]
-        self._refresh_token = data["refresh_token"]
-        return True
 
     async def get_version(self) -> VersionResponse:
         resp = await self._client.get("/version")
@@ -298,17 +263,10 @@ class AsyncTransport:
 
         if stream:
             resp = await self._client.stream(method, path, **kwargs).__aenter__()
-            if resp.status_code == 401 and await self._do_refresh():
-                await resp.aclose()
-                kwargs["headers"] = self._auth_headers
-                resp = await self._client.stream(method, path, **kwargs).__aenter__()
             _raise_for_status(resp)
             return resp
 
         resp = await self._client.request(method, path, **kwargs)
-        if resp.status_code == 401 and await self._do_refresh():
-            kwargs["headers"] = self._auth_headers
-            resp = await self._client.request(method, path, **kwargs)
         _raise_for_status(resp)
         return resp
 

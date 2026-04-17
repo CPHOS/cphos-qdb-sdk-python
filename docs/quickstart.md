@@ -5,7 +5,7 @@
 从 GitHub 安装（推荐指定版本标签）：
 
 ```bash
-uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.2
+uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v1.0.0
 ```
 
 安装最新 `main` 分支：
@@ -19,11 +19,8 @@ uv add cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git
 ```python
 from cphos_qdb import QBClient
 
-with QBClient("http://localhost:8080") as client:
+with QBClient("http://localhost:8080", access_token="bot-token-xxx") as client:
     print(client.version().version)
-
-    # 登录
-    client.login("bot_user", "bot_password")
 
     # 健康检查
     health = client.health()
@@ -78,9 +75,8 @@ import asyncio
 from cphos_qdb import AsyncQBClient
 
 async def main():
-    async with AsyncQBClient("http://localhost:8080") as client:
+    async with AsyncQBClient("http://localhost:8080", access_token="bot-token-xxx") as client:
         print((await client.version()).version)
-        await client.login("bot_user", "bot_password")
 
         questions = await client.list_questions(category="T")
         for q in questions.items:
@@ -99,9 +95,7 @@ asyncio.run(main())
 ```python
 from cphos_qdb import QBClient, QBNotFoundError, QBAuthError
 
-with QBClient("http://localhost:8080") as client:
-    client.login("bot_user", "bot_password")
-
+with QBClient("http://localhost:8080", access_token="bot-token-xxx") as client:
     try:
         client.get_question("nonexistent-uuid")
     except QBNotFoundError as e:
