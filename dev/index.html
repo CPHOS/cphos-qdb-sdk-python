@@ -714,21 +714,20 @@
 
 
 <h1 id="cphos-question-bank-sdk">CPHOS Question Bank SDK<a class="headerlink" href="#cphos-question-bank-sdk" title="Permanent link">&para;</a></h1>
-<p><a href="https://github.com/CPHOS/cphos-qdb-sdk-python/releases"><img alt="SDK Version" src="https://img.shields.io/badge/SDK-0.2.2-blue?logo=github" /></a>
-<a href="https://github.com/CPHOS/Question_DB"><img alt="Backend Compatibility" src="https://img.shields.io/badge/Backend-Question_DB%20%3E%3D%200.2.0-2ea44f?logo=github" /></a></p>
+<p><a href="https://github.com/CPHOS/cphos-qdb-sdk-python/releases"><img alt="SDK Version" src="https://img.shields.io/badge/SDK-1.0.0-blue?logo=github" /></a>
+<a href="https://github.com/CPHOS/Question_DB"><img alt="Backend Compatibility" src="https://img.shields.io/badge/Backend-Question_DB%20%3E%3D%201.0.0-2ea44f?logo=github" /></a></p>
 <p>面向 CPHOS 题库系统 bot 账号的 Python SDK，提供同步与异步两套客户端。</p>
 <h2 id="_1">功能<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>完整 API 覆盖</strong> — bot 可用的认证、题目、试卷、审阅人管理、Bundle 下载</li>
 <li><strong>同步 + 异步</strong> — <code>QBClient</code>（同步）和 <code>AsyncQBClient</code>（异步）</li>
-<li><strong>自动 Token 刷新</strong> — access token 过期时自动使用 refresh token 换新</li>
 <li><strong>自动版本协商</strong> — 首次请求前自动校验后端 <code>/version</code> 与 SDK 兼容性</li>
 <li><strong>类型安全</strong> — 所有响应使用 Pydantic v2 模型，完整类型提示</li>
 <li><strong>统一异常</strong> — HTTP 错误码映射为语义化异常类</li>
 </ul>
 <h2 id="_2">安装<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>从 GitHub 安装（推荐指定版本标签）：</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>add<span class="w"> </span>cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v0.2.2
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>add<span class="w"> </span>cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git@v1.0.0
 </code></pre></div>
 <p>安装最新 <code>main</code> 分支：</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>add<span class="w"> </span>cphos-qdb@git+https://github.com/CPHOS/cphos-qdb-sdk-python.git
